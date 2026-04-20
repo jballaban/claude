@@ -56,11 +56,22 @@
 - **Code quality:** ESLint and Prettier configured on project init; enforced in CI on every PR
 - **API style:** REST for external APIs; direct Lambda invocation for internal service-to-service
 
-## Frontend
+## Frontend (Web)
 
 - **Framework:** Next.js (App Router)
 - **Styling:** Tailwind CSS
+- **Components:** shadcn/ui — components are copied into the repo and owned by the project, no dependency lock-in
+- **Forms:** React Hook Form + Zod for validation
+- **Client state / data fetching:** TanStack Query for complex client-side server state; Next.js server components and actions for everything else
+- **Testing:** Vitest for unit tests; Playwright for end-to-end
 - **Deployment:** Vercel (preferred for simplicity) or AWS Amplify
+
+## Frontend (Mobile)
+
+- **Framework:** Expo (React Native) — lives as a workspace package in the monorepo alongside the web app
+- **Navigation:** Expo Router (file-based, consistent with Next.js App Router mental model)
+- **Builds:** EAS Build (Expo Application Services) — cloud builds for both iOS and Android; no Mac required for iOS; Windows developers can ship to both platforms
+- **Deployment:** EAS Submit for app store submissions
 
 ## Authentication
 
