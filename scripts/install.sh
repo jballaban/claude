@@ -16,6 +16,7 @@ mkdir -p \
   "$TARGET_DIR/.claude/framework" \
   "$TARGET_DIR/.claude/skills/pending" \
   "$TARGET_DIR/.claude/context" \
+  "$TARGET_DIR/.claude/project" \
   "$TARGET_DIR/spec/current" \
   "$TARGET_DIR/spec/next"
 
@@ -29,6 +30,11 @@ cp "$FRAMEWORK_DIR/.claude/skills/pending/SKILL.md"            "$TARGET_DIR/.cla
 
 # Copy MCP config (always overwrite)
 cp "$FRAMEWORK_DIR/.mcp.json" "$TARGET_DIR/.mcp.json"
+
+# CLAUDE.md is always overwritten — it is a managed file.
+# Project-specific instructions belong in .claude/project/extensions.md, not here.
+echo "Updating CLAUDE.md..."
+cp "$FRAMEWORK_DIR/templates/CLAUDE.md" "$TARGET_DIR/CLAUDE.md"
 
 # Copy template files only if they do not already exist (preserve project customisation)
 echo "Copying project templates (skipping existing files)..."
@@ -44,7 +50,7 @@ copy_if_missing() {
   fi
 }
 
-copy_if_missing "$FRAMEWORK_DIR/templates/CLAUDE.md"                              "$TARGET_DIR/CLAUDE.md"
+copy_if_missing "$FRAMEWORK_DIR/templates/.claude/project/extensions.md"          "$TARGET_DIR/.claude/project/extensions.md"
 copy_if_missing "$FRAMEWORK_DIR/templates/.claude/context/product.md"             "$TARGET_DIR/.claude/context/product.md"
 copy_if_missing "$FRAMEWORK_DIR/templates/.claude/context/tech-stack.md"          "$TARGET_DIR/.claude/context/tech-stack.md"
 copy_if_missing "$FRAMEWORK_DIR/templates/.claude/context/architecture.md"        "$TARGET_DIR/.claude/context/architecture.md"

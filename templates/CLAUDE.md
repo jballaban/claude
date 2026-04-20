@@ -15,6 +15,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## Project extensions
+
+> Add project-specific instructions, agent overrides, or additional process rules here. This section works within the framework above — it does not override mandatory process or agent definitions.
+
+@.claude/project/extensions.md
+
+---
+
 ## Project Context
 
 > The following files define this specific project. They inform agent behaviour and decision-making within the framework above.
