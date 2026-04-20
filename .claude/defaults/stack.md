@@ -95,6 +95,8 @@
 - All secrets in AWS Secrets Manager — never in environment variables, code, or committed files
 - IAM least-privilege for all Lambda execution roles — no wildcard permissions
 - VPC for all data stores
+- WAF enabled on all public-facing API Gateway and CloudFront distributions — AWS Managed Rules as baseline
+- API Gateway throttling enabled by default — limits defined per project in CDK; never left unlimited
 
 ---
 
