@@ -121,9 +121,12 @@
 
 ## Testing
 
-- **Unit tests:** Vitest — for web, shared packages, and Lambda functions
-- **E2E tests:** Playwright — for web critical paths
-- **Mobile tests:** Jest with Expo test utilities
+- **Web unit tests:** Vitest — for web, shared packages, and Lambda functions
+- **Web E2E tests:** Playwright — for web critical paths
+- **Mobile unit tests:** Jest with Expo test utilities
+- **Mobile E2E tests:** Maestro — YAML-based UI flows tested on device or simulator; works with Expo Go and native builds; runs in CI via EAS
+- **Backend unit tests:** Vitest with `@aws-sdk/client-mock` — mock AWS SDK calls to test Lambda logic in isolation without infrastructure
+- **Backend integration tests:** Run against the ephemeral feature environment in CI after deploy — tests hit real DynamoDB, SQS, API Gateway; no LocalStack needed
 - **File location:** Test files co-located with source (`foo.test.ts` next to `foo.ts`)
 - **Coverage:** No minimum percentage enforced — it is a gameable metric; all business logic and edge cases must have unit tests; critical user paths must have E2E coverage
 - **CI gate:** All tests must pass before a PR can merge
