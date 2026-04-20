@@ -87,6 +87,8 @@
 - **Logging:** CloudWatch Logs — structured JSON only
 - **Tracing:** AWS X-Ray
 - **Alerting:** CloudWatch Alarms → SNS
+- **Error tracking:** Sentry — exception grouping, stack traces, user context; SDK installed on web (Next.js), mobile (Expo), and backend (Lambda)
+- **Analytics & session replay:** PostHog — user analytics, session replay, and feature flags in one tool; works across web and mobile (Expo SDK available); self-hostable if required
 
 ## Security Defaults
 
