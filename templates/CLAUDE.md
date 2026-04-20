@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Team defaults
 
-> Opinionated technology choices that apply to all projects for this team. Override specific items in `conventions.md` with a documented reason.
+> Opinionated technology choices that apply to all projects for this team. Override specific items in `spec/context/conventions.md` with a documented reason.
 
 @.claude/defaults/stack.md
 
@@ -25,28 +25,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project extensions
 
-> Add project-specific instructions, agent overrides, or additional process rules here. This section works within the framework above — it does not override mandatory process or agent definitions.
+> Add project-specific Claude instructions here. Works within the framework above — does not override mandatory process or agent definitions.
 
 @.claude/project/extensions.md
 
 ---
 
-## Project Context
+## Project knowledge
 
-> The following files define this specific project. They inform agent behaviour and decision-making within the framework above.
+> Everything agents need to know about this project. The Analyst reads this as its source of truth. The Spec Writer keeps it accurate on every branch.
 
-@.claude/context/product.md
-@.claude/context/tech-stack.md
-@.claude/context/architecture.md
-@.claude/context/design-system.md
-@.claude/context/environments.md
-@.claude/context/conventions.md
-
----
-
-## Product Specs
-
-> The spec folder is the source of truth for what this product contains. The Analyst reads these files — not the codebase. Spec accuracy on every branch is maintained by the Spec Writer.
-
+@spec/context/product.md
+@spec/context/tech-stack.md
+@spec/context/architecture.md
+@spec/context/design-system.md
+@spec/context/environments.md
+@spec/context/conventions.md
 @spec/current/overview.md
 @spec/next/overview.md

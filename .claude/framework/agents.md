@@ -48,7 +48,7 @@ Owns the business specification. Receives raw requests from the Orchestrator, re
 - Share relevant roadmap context proactively with the Architect when future versions could affect current architectural decisions
 - Maintain full roadmap awareness — understands what is live, what is in-flight across all active branches, and all planned future versions
 
-**Source of truth:** The Analyst reads `spec/` files and open GitHub issues. Does not read the codebase. The spec folder on each branch is the Analyst's view of what that branch contains.
+**Source of truth:** The Analyst reads the `spec/` folder (including `spec/context/`) and open GitHub issues. Does not read the codebase. The spec folder on each branch is the Analyst's complete view of what that branch contains and what the project is.
 
 **Spec format:** Flexible — complexity drives format. A bug fix may need only a description. A complex feature may need multiple documents. No fixed template.
 
@@ -204,5 +204,6 @@ Maintains the spec folder as the accurate, living source of truth across all bra
 - After implementation, reconcile the spec against what was actually built; flag discrepancies to the Analyst
 - Resolve spec file merge conflicts when branches are merged — as the agent with full context of what changed across branches
 - Ensure no architectural decision, scope change, or technical choice lives only in a closed GitHub issue; capture anything with long-term relevance in the spec
+- Own `spec/context/` files as well as `spec/current/` and `spec/next/` — if a branch changes something fundamental (tech stack, product description, environments), update the relevant context file on that branch so the Analyst always reads an accurate picture of what the project is on that branch
 
-**Why this matters:** The Analyst does not read code — it reads specs. Every branch's spec folder must accurately reflect what that branch contains. If the spec drifts from reality, the Analyst makes decisions on stale information and the entire system degrades.
+**Why this matters:** The Analyst does not read code — it reads the `spec/` folder. Every branch's spec must accurately reflect what that branch contains — including context. If the spec drifts from reality, the Analyst makes decisions on stale information and the entire system degrades.
