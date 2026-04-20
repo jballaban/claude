@@ -30,7 +30,8 @@ cp "$FRAMEWORK_DIR/.claude/skills/pending/SKILL.md"             "$TARGET_DIR/.cl
 
 # Copy team defaults (always overwrite — update here to change team-wide stack choices)
 echo "Copying team defaults..."
-cp "$FRAMEWORK_DIR/.claude/defaults/stack.md" "$TARGET_DIR/.claude/defaults/stack.md"
+cp "$FRAMEWORK_DIR/.claude/defaults/stack.md"    "$TARGET_DIR/.claude/defaults/stack.md"
+cp "$FRAMEWORK_DIR/.claude/defaults/patterns.md" "$TARGET_DIR/.claude/defaults/patterns.md"
 
 # Copy MCP config (always overwrite)
 cp "$FRAMEWORK_DIR/.mcp.json" "$TARGET_DIR/.mcp.json"

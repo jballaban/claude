@@ -20,6 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > Opinionated technology choices that apply to all projects for this team. Override specific items in `spec/context/conventions.md` with a documented reason.
 
 @.claude/defaults/stack.md
+@.claude/defaults/patterns.md
 
 ---
 
