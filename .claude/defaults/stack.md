@@ -6,18 +6,35 @@
 
 ---
 
+## Developer Environment
+
+- **OS:** Windows with WSL2 (Ubuntu) required for all development
+- **File storage:** Projects stored on Windows filesystem (`C:\projects\`) — accessible normally in Explorer, TortoiseGit, and all Windows tools; WSL2 accesses via `/mnt/c/projects/`
+- **Terminal:** Windows Terminal running WSL2 bash
+- **Editor:** Cursor with WSL extension (connects transparently to WSL2); all tooling runs inside WSL2
+- **Line endings:** `.gitattributes` enforcing LF for all text files — prevents CRLF contamination from Windows tools
+- **All manual commands** in documentation are written for WSL2 bash — not PowerShell or cmd
+
 ## Hosting & Infrastructure
 
 - **Cloud platform:** AWS
+- **Region:** `us-east-1` (primary region for all projects)
+- **Account strategy:** Separate AWS accounts per environment — dev (ephemeral feature environments), staging (`next` branch), production (`main` branch)
 - **Compute:** Serverless-first — Lambda for functions, Fargate for containers when a long-running process is genuinely required
 - **Scaling:** Auto-scaling by default. No fixed-capacity servers unless there is an explicit, documented reason
 - **IaC:** AWS CDK in TypeScript for all infrastructure definitions
+- **DNS:** Route 53 for all domain management
+- **CDN:** CloudFront for all static asset delivery
 
 ## CI/CD
 
-- **Merge to `main`** → automatically deploys to production
-- **Merge to `next`** → automatically deploys to staging
-- **Feature branches** → ephemeral AWS environment spun up by DevOps when backend infrastructure is required; destroyed on branch merge or deletion
+- **Platform:** GitHub Actions
+- **Authentication:** OIDC — no long-lived AWS credentials stored anywhere; each environment has an IAM role with a trust policy scoped to this repository; role ARNs stored in GitHub Secrets (`AWS_ROLE_DEV`, `AWS_ROLE_STAGING`, `AWS_ROLE_PROD`)
+- **On every PR:** TypeScript type check, ESLint, unit tests — PR cannot merge if any fail
+- **Merge to `main`** → automatically deploys to production AWS account
+- **Merge to `next`** → automatically deploys to staging AWS account
+- **Feature branch push** → ephemeral CDK stack deployed to dev AWS account; stack name includes branch name; destroyed automatically on branch merge or deletion
+- **Resource naming:** `{project}-{env}-{resource}` e.g. `myapp-prod-api`, `myapp-staging-table`
 
 ## Storage
 
@@ -32,7 +49,11 @@
 ## Application
 
 - **Language:** TypeScript for all new code — frontend and backend
+- **TypeScript mode:** `strict` always enabled — no exceptions
 - **Runtime:** Node.js (latest LTS)
+- **Package manager:** pnpm
+- **Project structure:** Monorepo using pnpm workspaces — packages for frontend, backend, infrastructure (CDK), and shared types
+- **Code quality:** ESLint and Prettier configured on project init; enforced in CI on every PR
 - **API style:** REST for external APIs; direct Lambda invocation for internal service-to-service
 
 ## Frontend
