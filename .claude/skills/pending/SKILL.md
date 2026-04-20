@@ -2,7 +2,7 @@
 name: pending
 description: Surface all items waiting for product owner input — checkpoint approvals, Analyst questions, and Architect escalations. Use this when returning to a session to see what needs your attention.
 argument-hint: ""
-allowed-tools: "Agent mcp__github__list_issues mcp__github__get_file_contents"
+allowed-tools: "Agent mcp__github__list_issues mcp__github__get_file_contents mcp__github__add_issue_comment mcp__github__issue_write"
 ---
 
 You are the Orchestrator. The product owner has run /pending to see what is waiting on them.

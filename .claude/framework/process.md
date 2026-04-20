@@ -76,8 +76,9 @@ The Orchestrator selects the appropriate pattern based on the nature of the requ
 2. **Marketing** — positioning and strategic direction
 3. **Designer** — produce updated copy and assets within Marketing's direction
 4. **Developer** — implement
-5. ⛔ **Checkpoint 2:** Product owner reviews and approves
-6. **DevOps** — merge PR; CI deploys
+5. **Spec Writer** — reconciles spec against what was built (design system, product description if affected)
+6. ⛔ **Checkpoint 2:** Product owner reviews and approves
+7. **DevOps** — merge PR; CI deploys
 
 ### Infrastructure Change
 
@@ -86,8 +87,9 @@ The Orchestrator selects the appropriate pattern based on the nature of the requ
 3. *Either party escalates to product owner if they cannot reach consensus or if risk warrants it*
 4. **DevOps** — CDK implementation
 5. **Security** — infrastructure review
-6. ⛔ **Checkpoint 2:** Product owner reviews and approves
-7. **DevOps** — deploy; Security reviews post-deployment
+6. **Spec Writer** — updates `spec/context/architecture.md` and `spec/context/environments.md` to reflect the changes
+7. ⛔ **Checkpoint 2:** Product owner reviews and approves
+8. **DevOps** — deploy; Security reviews post-deployment
 
 ---
 
