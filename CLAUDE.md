@@ -25,12 +25,12 @@ Then fill in the generated template files:
 
 | File | What to fill in |
 |------|----------------|
-| `.claude/context/product.md` | What the product is, who it is for, what problem it solves |
-| `.claude/context/tech-stack.md` | Languages, frameworks, key dependencies specific to this project |
-| `.claude/context/architecture.md` | How the major pieces connect |
-| `.claude/context/design-system.md` | Brand guidelines, tone, colours, typography, asset locations |
-| `.claude/context/environments.md` | Dev, staging, production URLs and deployment procedures |
-| `.claude/context/conventions.md` | Project-specific patterns and any architecture-standards.md overrides |
+| `spec/context/product.md` | What the product is, who it is for, what problem it solves |
+| `spec/context/tech-stack.md` | Dependencies and services additive to or overriding the team defaults |
+| `spec/context/architecture.md` | How the major pieces connect |
+| `spec/context/design-system.md` | Brand guidelines, tone, colours, typography, asset locations |
+| `spec/context/environments.md` | URLs, AWS account IDs, and one-time CI/CD setup steps |
+| `spec/context/conventions.md` | Project-specific patterns and stack overrides with reasons |
 | `spec/current/overview.md` | What is live in production right now |
 | `spec/next/overview.md` | What the next major release will contain |
 
@@ -40,7 +40,7 @@ Then fill in the generated template files:
 
 The product owner interacts exclusively through Claude. Claude acts as the **Orchestrator** — an administrative coordinator that routes work to a team of specialist agents and enforces the process defined in `.claude/framework/`.
 
-**Agent team:** Orchestrator, Analyst, Architect, Developer, Designer, Marketing, QA, DevOps, Security, Spec Writer
+**Agent team:** Orchestrator, Analyst, Spec Writer, Architect, Developer, Designer, Marketing, QA, DevOps, Security
 
 **The product owner never needs to know which agent handles what.** They describe what they want. The Orchestrator handles the rest.
 
@@ -58,22 +58,25 @@ Run `/pending` at any time to see everything waiting on you.
 
 ```
 .claude/
-  framework/         # Non-negotiable process, agent definitions, quality gates, architecture standards
-  skills/pending/    # /pending slash command
+  framework/          # Non-negotiable — process, agents, quality gates, architecture principles
+  defaults/           # Team defaults — stack choices, conventions, pattern references
+  skills/pending/     # /pending slash command
 templates/
-  CLAUDE.md          # Project CLAUDE.md template (copied to target repos)
-  .claude/context/   # Project context file templates
+  CLAUDE.md           # Project CLAUDE.md template (copied to target repos)
+  spec/context/       # Project context file templates
 spec/
-  current/           # Spec for what is live — maintained by Spec Writer
-  next/              # Spec for the next major release — maintained by Spec Writer
+  current/            # Spec for what is live — maintained by Spec Writer
+  next/               # Spec for the next major release — maintained by Spec Writer
 scripts/
-  install.sh         # Copies framework into a target repository
+  install.sh          # Copies framework into a target repository
 ```
 
 ---
 
 ## Contributing improvements
 
-When you learn something working in a project — a better process step, a missing quality gate, a wrong architecture default — improve it here. Run `install.sh` in your projects to pull in the update.
+When you learn something working in a project — a better process step, a missing quality gate, a wrong default, a new team decision — improve it here. Run `install.sh` in your projects to pull in the update.
 
-Framework files (`.claude/framework/`) are always overwritten by `install.sh`. Project context files (`.claude/context/`, `spec/`) are never overwritten — they preserve project-specific work.
+**Always overwritten by `install.sh`:** `.claude/framework/`, `.claude/defaults/`, `.claude/skills/`, `CLAUDE.md`
+
+**Never overwritten by `install.sh`:** `spec/` — preserves all project-specific work.
