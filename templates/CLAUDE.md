@@ -6,12 +6,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Framework (non-negotiable)
 
-> The following defines the mandatory process, agent roles, quality gates, and architecture standards for this project. What follows in the project context section customises HOW agents work — it does not override WHETHER the process is followed.
+> Mandatory process, agent roles, quality gates, and universal engineering principles. Nothing below overrides this layer.
 
 @.claude/framework/process.md
 @.claude/framework/agents.md
 @.claude/framework/quality-gates.md
 @.claude/framework/architecture-standards.md
+
+---
+
+## Team defaults
+
+> Opinionated technology choices that apply to all projects for this team. Override specific items in `conventions.md` with a documented reason.
+
+@.claude/defaults/stack.md
 
 ---
 

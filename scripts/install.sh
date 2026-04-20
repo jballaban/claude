@@ -14,6 +14,7 @@ echo ""
 # Create required directories
 mkdir -p \
   "$TARGET_DIR/.claude/framework" \
+  "$TARGET_DIR/.claude/defaults" \
   "$TARGET_DIR/.claude/skills/pending" \
   "$TARGET_DIR/.claude/context" \
   "$TARGET_DIR/.claude/project" \
@@ -27,6 +28,10 @@ cp "$FRAMEWORK_DIR/.claude/framework/process.md"               "$TARGET_DIR/.cla
 cp "$FRAMEWORK_DIR/.claude/framework/quality-gates.md"         "$TARGET_DIR/.claude/framework/quality-gates.md"
 cp "$FRAMEWORK_DIR/.claude/framework/architecture-standards.md" "$TARGET_DIR/.claude/framework/architecture-standards.md"
 cp "$FRAMEWORK_DIR/.claude/skills/pending/SKILL.md"            "$TARGET_DIR/.claude/skills/pending/SKILL.md"
+
+# Copy defaults (always overwrite — these are the team's standard stack choices)
+echo "Copying team defaults..."
+cp "$FRAMEWORK_DIR/.claude/defaults/stack.md" "$TARGET_DIR/.claude/defaults/stack.md"
 
 # Copy MCP config (always overwrite)
 cp "$FRAMEWORK_DIR/.mcp.json" "$TARGET_DIR/.mcp.json"
