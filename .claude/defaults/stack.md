@@ -139,6 +139,14 @@
 - **Cross-region replication:** Not enabled by default — adds cost and complexity; document as an option in `conventions.md` for projects with high-availability requirements
 - **Restoration testing:** DevOps must periodically verify that backups can actually be restored — untested backups are unreliable; schedule restore tests and document results
 
+## Conventions
+
+- **Branch naming:** `feature/{issue-number}-{short-description}`, `fix/{issue-number}-{short-description}`, `chore/{short-description}`
+- **Commit format:** Imperative, present tense — "Add user auth" not "Added user auth"; one subject line; body optional for non-obvious decisions
+- **PR format:** Title matches the issue; body includes what changed, why, and how to test; linked to GitHub issue
+- **PR merges:** Squash merge to keep `main` and `next` history clean
+- **Code review:** PRs require at least one approval before merge; all CI checks must pass
+
 ---
 
 ## Overrides

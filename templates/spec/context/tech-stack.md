@@ -1,34 +1,12 @@
 # Tech Stack
 
-Overrides to architecture-standards.md defaults are documented in conventions.md. Everything here is additive — the defaults still apply unless explicitly overridden there.
+This project uses the team defaults defined in `.claude/defaults/stack.md`. Document only what is additive or different here.
 
-## Language & Runtime
-- TypeScript (Node.js LTS)
-
-## Frontend
-- Next.js (App Router)
-- Tailwind CSS
-<!-- Add any additional UI libraries used in this project -->
-
-## Backend
-- AWS Lambda (serverless functions)
-- AWS API Gateway
-<!-- List specific Lambda functions or services if helpful -->
-
-## Infrastructure
-- AWS CDK (TypeScript)
-<!-- List key CDK stacks -->
-
-## Data
-- <!-- Primary database: e.g. Aurora Serverless v2 (PostgreSQL) -->
-- <!-- Other data stores used -->
-
-## Authentication
-- AWS Cognito
-- <!-- Any identity providers: Google, Apple, etc. -->
-
-## Key dependencies
-- <!-- List non-obvious packages and why they are used -->
+## Additional dependencies
+<!-- Non-obvious packages this project uses and why — omit anything already in defaults -->
 
 ## External services & integrations
-- <!-- Third-party APIs, webhooks, services -->
+<!-- Third-party APIs, webhooks, or services beyond the default stack -->
+
+## Stack overrides
+<!-- Any deviation from defaults — must also be documented in conventions.md with a reason -->

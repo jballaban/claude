@@ -1,34 +1,16 @@
 # Conventions
 
-Project-specific patterns, decisions, and behavioral instructions for agents. Anything that would not be obvious from reading the code or architecture standards. This is also the right place for project-specific guidance on how agents should behave — preferred approaches, things to avoid, constraints specific to this product.
+Project-specific overrides and additions. Team-wide conventions (branch naming, commit format, PR format, testing approach) are defined in `.claude/defaults/stack.md` and apply automatically. Only document what is different or additional for this project.
 
-## Architecture overrides
-<!-- Document any deviations from architecture-standards.md with a reason -->
-<!-- Example: Using MongoDB instead of Aurora Serverless: existing data model from prior system -->
+## Stack overrides
+<!-- Deviations from .claude/defaults/stack.md — document the reason -->
+<!-- Example: Using MongoDB instead of Aurora Serverless: existing data model from acquired system -->
 
-## Naming conventions
-<!-- File naming, variable naming, component naming, database table/column naming -->
+## Project-specific patterns
+<!-- Naming, file structure, or architectural decisions unique to this project -->
 
-## File & folder structure
-<!-- Any non-obvious organisation decisions -->
-
-## Branch naming
-<!-- e.g. feature/{issue-number}-{short-description}, fix/{issue-number}-{description} -->
-
-## Commit conventions
-<!-- Format, required fields, examples -->
-
-## PR conventions
-<!-- Required reviewers, size limits, description format -->
-
-## Testing approach
-<!-- Test file location, naming, coverage expectations -->
-
-## Error handling patterns
-<!-- How errors are caught, logged, and surfaced to users -->
-
-## Logging conventions
-<!-- What gets logged, at what level, what format -->
+## Agent guidance
+<!-- Project-specific instructions for how agents should behave in this codebase -->
 
 ## Known technical debt
 <!-- Documented shortcuts or temporary decisions and when they should be addressed -->

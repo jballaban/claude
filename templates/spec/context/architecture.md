@@ -12,7 +12,7 @@ High-level overview of how the major pieces connect. Enough for the Architect to
 <!-- How does data move through the system? Key entry points, transformations, storage -->
 
 ## AWS account structure
-<!-- Single account? Multi-account (dev/staging/prod)? Any account-level boundaries worth noting -->
+<!-- Default: 3 separate accounts — dev (ephemeral), staging, production. Note here if this project differs. -->
 
 ## Monorepo / repo structure
 <!-- If multiple apps or packages exist, describe how they are organised -->
