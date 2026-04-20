@@ -98,6 +98,36 @@
 - WAF enabled on all public-facing API Gateway and CloudFront distributions — AWS Managed Rules as baseline
 - API Gateway throttling enabled by default — limits defined per project in CDK; never left unlimited
 
+## AI Integration
+
+- **SDK:** Anthropic TypeScript SDK (`@anthropic-ai/sdk`)
+- **Models:** claude-opus-4-7 for complex reasoning (Architect, Analyst, Security agents); claude-sonnet-4-6 for standard tasks; claude-haiku-4-5-20251001 for lightweight or high-volume operations
+- **Prompt caching:** Enabled by default for all long system prompts — reduces cost and latency significantly
+- **Streaming:** Required for all user-facing Claude responses — never block waiting for a complete response
+- **Model references:** Never hardcode model name strings in application code — define as named constants in a single config file so upgrades are a one-line change
+
+## Payments
+
+- **Provider:** Stripe for all payment processing, subscriptions, and invoicing
+- **Webhooks:** All Stripe webhook events verified server-side using Stripe signature before processing — never trust unverified webhook payloads
+- **Card data:** Never stored — Stripe handles all PCI compliance; use Stripe Elements or Stripe Checkout on the frontend
+- **Subscriptions:** Stripe Customer Portal for self-serve subscription management
+
+## Notifications
+
+- **Mobile push:** Expo Notifications SDK — EAS manages APNs (iOS) and FCM (Android) credentials; no direct APNs/FCM integration required
+- **Backend delivery:** AWS SNS as the fan-out layer — Lambda publishes to SNS, SNS delivers to push, email (SES), or SMS targets
+- **In-app notifications:** Stored in DynamoDB, surfaced via API; real-time delivery via API Gateway WebSocket or polling
+
+## Testing
+
+- **Unit tests:** Vitest — for web, shared packages, and Lambda functions
+- **E2E tests:** Playwright — for web critical paths
+- **Mobile tests:** Jest with Expo test utilities
+- **File location:** Test files co-located with source (`foo.test.ts` next to `foo.ts`)
+- **Coverage:** No minimum percentage enforced — it is a gameable metric; all business logic and edge cases must have unit tests; critical user paths must have E2E coverage
+- **CI gate:** All tests must pass before a PR can merge
+
 ---
 
 ## Overrides
