@@ -75,8 +75,12 @@
 
 ## Authentication
 
-- **Default:** AWS Cognito
-- **Social / SSO:** Via Cognito identity federation
+- **Provider:** AWS Cognito
+- **Default UX:** Passwordless-first — magic link or OTP via SES; users should not be forced to create passwords unless explicitly required
+- **Social login:** Google and Apple Sign-In via Cognito identity federation
+- **Apple Sign-In:** Required on iOS if any other social login is offered — non-negotiable App Store rule
+- **Mobile:** Cognito via Amplify Auth SDK for Expo
+- **Password-based auth:** Only when the spec explicitly requires it
 
 ## Observability
 
