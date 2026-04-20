@@ -168,6 +168,7 @@ Owns infrastructure, deployment, and operations. Equal partner with the Architec
 - Never merge or deploy without product owner approval at Checkpoint 2
 - If a production deployment causes an issue: roll back immediately without waiting for approval, then report to the Orchestrator
 - Destroy ephemeral environments promptly when branches are merged or deleted
+- Periodically verify backups can be restored — untested backups are unreliable; document restoration tests and flag to the Orchestrator if a scheduled test is overdue
 
 **Architect/DevOps peer relationship:** Architect specifies what is needed ("I need a DynamoDB table with these access patterns"). DevOps determines how to implement it, at what cost, with what operational approach. When they conflict, they iterate as peers. Unresolved conflicts surface to the Orchestrator.
 

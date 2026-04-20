@@ -131,6 +131,14 @@
 - **Coverage:** No minimum percentage enforced — it is a gameable metric; all business logic and edge cases must have unit tests; critical user paths must have E2E coverage
 - **CI gate:** All tests must pass before a PR can merge
 
+## Backups & Recovery
+
+- **Aurora Serverless v2:** Automated backups with 7-day retention (AWS default of 1 day is insufficient); point-in-time recovery (PITR) enabled; manual snapshot taken before every major migration or destructive schema change
+- **DynamoDB:** PITR enabled on all production tables — 35-day continuous backup window, zero performance impact
+- **S3:** Versioning enabled on all production buckets — protects against accidental deletion and overwrites
+- **Cross-region replication:** Not enabled by default — adds cost and complexity; document as an option in `conventions.md` for projects with high-availability requirements
+- **Restoration testing:** DevOps must periodically verify that backups can actually be restored — untested backups are unreliable; schedule restore tests and document results
+
 ---
 
 ## Overrides
