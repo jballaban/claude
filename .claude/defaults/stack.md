@@ -23,8 +23,10 @@
 
 - **Relational data:** Aurora Serverless v2 (PostgreSQL-compatible)
 - **Key-value / high-throughput:** DynamoDB
-- **Caching:** ElastiCache (Redis) when a caching layer is needed
 - **File storage:** S3
+- **Async queuing:** SQS — default pattern for all background processing and decoupled async work; do not do async work synchronously in API calls
+- **Transactional email:** SES — welcome emails, password resets, notifications; do not add external email providers (SendGrid, Mailgun) when SES suffices
+- **Caching:** ElastiCache (Redis) when a measured performance problem justifies it — always-on cost even at zero traffic; do not add speculatively
 - **Search:** OpenSearch when full-text search is required — evaluate cost before adding
 
 ## Application
