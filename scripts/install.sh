@@ -16,7 +16,6 @@ mkdir -p \
   "$TARGET_DIR/.claude/framework" \
   "$TARGET_DIR/.claude/defaults" \
   "$TARGET_DIR/.claude/skills/pending" \
-  "$TARGET_DIR/.claude/project" \
   "$TARGET_DIR/spec/context" \
   "$TARGET_DIR/spec/current" \
   "$TARGET_DIR/spec/next"
@@ -55,7 +54,6 @@ copy_if_missing() {
   fi
 }
 
-copy_if_missing "$FRAMEWORK_DIR/templates/.claude/project/extensions.md"   "$TARGET_DIR/.claude/project/extensions.md"
 copy_if_missing "$FRAMEWORK_DIR/templates/spec/context/product.md"          "$TARGET_DIR/spec/context/product.md"
 copy_if_missing "$FRAMEWORK_DIR/templates/spec/context/tech-stack.md"       "$TARGET_DIR/spec/context/tech-stack.md"
 copy_if_missing "$FRAMEWORK_DIR/templates/spec/context/architecture.md"     "$TARGET_DIR/spec/context/architecture.md"

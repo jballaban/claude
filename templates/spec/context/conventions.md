@@ -1,6 +1,6 @@
 # Conventions
 
-Project-specific patterns and decisions. Anything that would not be obvious from reading the code or architecture standards.
+Project-specific patterns, decisions, and behavioral instructions for agents. Anything that would not be obvious from reading the code or architecture standards. This is also the right place for project-specific guidance on how agents should behave — preferred approaches, things to avoid, constraints specific to this product.
 
 ## Architecture overrides
 <!-- Document any deviations from architecture-standards.md with a reason -->

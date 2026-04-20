@@ -23,14 +23,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## Project extensions
-
-> Add project-specific Claude instructions here. Works within the framework above — does not override mandatory process or agent definitions.
-
-@.claude/project/extensions.md
-
----
-
 ## Project knowledge
 
 > Everything agents need to know about this project. The Analyst reads this as its source of truth. The Spec Writer keeps it accurate on every branch.
