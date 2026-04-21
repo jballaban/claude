@@ -16,10 +16,11 @@ A marketplace of agents and skills for building software products with Claude Co
 ### Install
 
 ```
-/plugin install claude-framework@claude-plugins-official
+/plugin marketplace add jballaban/claude
+/plugin install claude-framework
 ```
 
-Installs all 10 agents and all 3 skills into your project in one step.
+Installs all 10 agents and all 4 skills into your project in one step.
 
 ### After installation
 

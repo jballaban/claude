@@ -1,8 +1,7 @@
 {
-  "id": "claude-framework",
-  "name": "Claude Framework — Full Team",
+  "name": "claude-framework",
   "version": "2.0.0",
-  "description": "A full product team for Claude Code. Three phases — strategy, planning, development — with 10 specialist agents and three workflow skills for building products from idea to launch.",
+  "description": "A full product team for Claude Code. Three phases — strategy, planning, development — with 10 specialist agents and four workflow skills for building products from idea to launch.",
   "agents": [
     "agents/strategist",
     "agents/analyst",
