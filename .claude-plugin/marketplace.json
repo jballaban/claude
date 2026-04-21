@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    {
+      "name": "claude-framework",
+      "description": "A full product team for Claude Code. Three phases — strategy, planning, development — with 10 specialist agents and four workflow skills for building products from idea to launch.",
+      "version": "2.0.0",
+      "source": "./"
+    }
+  ]
+}
