@@ -21,9 +21,12 @@ If `spec/roadmap.md` does not exist, stop and tell the founder to run `/plan` fi
 
 ## Step 2: Determine what's been built
 
-For each feature in the roadmap, check whether a branch named `feature/{feature-name}` has been merged into the default branch. A merged branch means the feature is built.
+A feature is considered built if **either** condition is true:
 
-Use the GitHub branches API to list merged branches.
+1. It has `status: built` in `spec/roadmap.md` — set by `/migrate` for features that existed before this framework was installed
+2. A branch named `feature/{feature-name}` has been merged into the default branch — the normal post-migration flow
+
+Check `spec/roadmap.md` for `status: built` entries first (no API call needed). Then use the GitHub branches API to check for merged `feature/` branches for the remaining features.
 
 ---
 
@@ -36,8 +39,8 @@ List open GitHub issues. A feature with an open issue is already in progress —
 ## Step 4: Compute the frontier
 
 The frontier = features where:
-- All `depends_on` features are built (their branches are merged)
-- No merged branch exists for this feature yet
+- All `depends_on` features are built (merged branch or `status: built`)
+- This feature itself is not built (no merged branch and no `status: built`)
 - No open GitHub issue exists for this feature yet
 
 ---

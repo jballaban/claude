@@ -16,6 +16,7 @@
     "agents/spec-writer"
   ],
   "skills": [
+    "skills/migrate",
     "skills/strategy",
     "skills/plan",
     "skills/build"

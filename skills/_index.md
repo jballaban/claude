@@ -4,10 +4,11 @@ Skills are slash commands the founder invokes inside Claude Code. Each skill cor
 
 ---
 
-## The three skills
+## Skills
 
 | Skill | Trigger | Phase | Description |
 |-------|---------|-------|-------------|
+| [migrate](migrate/SKILL.md) | `/migrate` | Setup | One-time migration for existing repos. Reconstructs strategy, maps existing features to shallow specs, marks all current main-branch features as built. |
 | [strategy](strategy/SKILL.md) | `/strategy` | 1 — Strategy | Define the strategic foundation: competitive landscape, target market, monetization model, GTM approach, and feature principles. Output: `strategy/` folder. |
 | [plan](plan/SKILL.md) | `/plan` | 2 — Planning | Plan features from approved strategy. Produces complete specs — business, technical, design, launch, security, infrastructure — and updates the dependency graph. Output: `spec/features/` + `spec/roadmap.md`. |
 | [build](build/SKILL.md) | `/build` | 3 — Development | Build the next features in the dependency graph. Reads `spec/roadmap.md` and GitHub branch state, opens issues, implements in parallel, waits for founder to merge PRs. Re-run to advance. |
@@ -16,19 +17,25 @@ Skills are slash commands the founder invokes inside Claude Code. Each skill cor
 
 ## Sequence
 
+**New project:**
 ```
 /strategy  →  strategy/ committed
     ↓
 /plan      →  spec/features/ + spec/roadmap.md committed
     ↓
-/build     →  PRs raised  →  founder merges
-    ↓
-/build     →  next frontier  →  PRs raised  →  founder merges
-    ↓
-    ...
+/build     →  PRs raised  →  founder merges  →  /build  →  ...
 ```
 
-Each skill gates the next phase. `/plan` requires `strategy/` to exist. `/build` requires `spec/roadmap.md` to exist.
+**Existing project:**
+```
+/migrate   →  strategy/ + spec/features/ + spec/roadmap.md committed
+    ↓
+/plan      →  spec new features going forward
+    ↓
+/build     →  builds from the frontier (existing features already marked built)
+```
+
+Each core skill gates the next phase. `/plan` requires `strategy/` to exist. `/build` requires `spec/roadmap.md` to exist.
 
 ---
 

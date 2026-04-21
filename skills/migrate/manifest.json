@@ -1,0 +1,14 @@
+{
+  "id": "migrate",
+  "name": "migrate",
+  "type": "skill",
+  "trigger": "/migrate",
+  "description": "One-time migration for existing repositories. Reconstructs strategy from codebase and founder conversation, maps existing features into shallow specs, marks all current main-branch features as built in spec/roadmap.md.",
+  "category": "setup",
+  "tags": ["migration", "setup", "one-time"],
+  "dependencies": {
+    "framework": [],
+    "agents": ["strategist", "analyst", "spec-writer"],
+    "skills": []
+  }
+}

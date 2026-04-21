@@ -18,6 +18,12 @@ features:
   - name: another-feature
     description: One-line description
     depends_on: [example-feature]
+
+  # Migration example — feature already in main before this framework was installed:
+  # - name: legacy-auth
+  #   description: Original authentication system
+  #   depends_on: []
+  #   status: built
 ```
 
 ---
@@ -27,4 +33,6 @@ features:
 - `depends_on: []` means the feature can be built immediately (no dependencies)
 - List only features whose *code* this feature directly depends on — not every feature that happens to ship before it
 - Features with the same dependency set can be built in parallel
-- `/build` uses GitHub merged branch state to determine what is "built" — a feature is built when `feature/{name}` has been merged into the default branch
+- A feature is considered built if **either**:
+  - It has `status: built` set here — used by `/migrate` for features that predate this framework
+  - Its `feature/{name}` branch has been merged into the default branch — the normal flow going forward

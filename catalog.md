@@ -53,17 +53,26 @@ If `/strategy` starts a conversation, the skill is installed and the Strategist 
 
 ## How it works
 
+**New project:**
 ```
 /strategy  →  Strategist + Spec Writer
                └── strategy/ (vision, market, monetization, gtm, principles)
                         ↓
 /plan      →  Analyst + Architect + Marketing + Designer + Spec Writer
-               └── spec/features/{feature}/ × N
-               └── spec/roadmap.md (dependency graph)
+               └── spec/features/{feature}/ × N  +  spec/roadmap.md
                         ↓
 /build     →  Developer + QA + Security + DevOps + Spec Writer
-               └── PRs on feature/{name} branches
-               └── Founder merges → /build advances the graph
+               └── PRs on feature/{name} branches → founder merges → repeat
+```
+
+**Existing project:**
+```
+/migrate   →  Strategist + Analyst + Spec Writer
+               └── strategy/ reconstructed from codebase + conversation
+               └── spec/features/{feature}/ (shallow) for all existing features
+               └── spec/roadmap.md with status: built for everything in main
+                        ↓
+/plan  →  /build  (proceeds normally from the frontier)
 ```
 
 ---
@@ -72,6 +81,7 @@ If `/strategy` starts a conversation, the skill is installed and the Strategist 
 
 | Skill | Trigger | Phase | Description |
 |-------|---------|-------|-------------|
+| [migrate](skills/migrate/SKILL.md) | `/migrate` | Setup | One-time migration for existing repos. Reconstructs strategy, maps features to shallow specs, marks all existing features as built. |
 | [strategy](skills/strategy/SKILL.md) | `/strategy` | 1 | Define the strategic foundation — competitive landscape, target market, monetization, GTM, principles. |
 | [plan](skills/plan/SKILL.md) | `/plan` | 2 | Plan features from approved strategy. Complete specs with business, technical, design, launch, security, and infrastructure context. |
 | [build](skills/build/SKILL.md) | `/build` | 3 | Build the dependency graph frontier. Opens issues, implements in parallel, surfaces PRs for founder review. Re-run to advance. |
