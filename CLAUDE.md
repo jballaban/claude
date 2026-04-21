@@ -40,7 +40,8 @@ Skills are Claude Code plugins: user-invocable slash commands. They invoke agent
 ### Install into a new project
 
 ```
-/plugin install claude-framework@claude-plugins-official
+/plugin marketplace add jballaban/claude
+/plugin install claude-framework
 ```
 
 The plugin installs all 10 agents and all skills into your project in one step.
