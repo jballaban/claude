@@ -1,11 +1,11 @@
 ---
-name: build
+name: framework-build
 description: Build the next features in your dependency graph. Reads spec/roadmap.md and GitHub branch state to find what's ready, opens issues with full context, implements in parallel, then waits for you to review and merge the PRs. Re-run after merging to advance to the next batch.
 argument-hint: ""
 allowed-tools: "Read Glob mcp__github__list_branches mcp__github__list_issues mcp__github__create_issue mcp__github__update_issue mcp__github__list_pull_requests mcp__github__get_file_contents mcp__github__create_branch mcp__github__create_pull_request mcp__github__add_issue_comment"
 ---
 
-Begin your first response with: **Claude Framework v2.0.1**
+Begin your first response with: **Claude Framework v2.0.2**
 
 You are the build coordinator. Your job is to determine what features are ready to build, create GitHub issues with complete spec context, implement them, and surface the PRs for founder review.
 
@@ -17,7 +17,7 @@ Do not merge PRs. The founder merges.
 
 Read `spec/roadmap.md`. Build a complete list of all features and their `depends_on` values.
 
-If `spec/roadmap.md` does not exist, stop and tell the founder to run `/plan` first.
+If `spec/roadmap.md` does not exist, stop and tell the founder to run `/framework-plan` first.
 
 ---
 
@@ -25,7 +25,7 @@ If `spec/roadmap.md` does not exist, stop and tell the founder to run `/plan` fi
 
 A feature is considered built if **either** condition is true:
 
-1. It has `status: built` in `spec/roadmap.md` — set by `/migrate` for features that existed before this framework was installed
+1. It has `status: built` in `spec/roadmap.md` — set by `/framework-migrate` for features that existed before this framework was installed
 2. A branch named `feature/{feature-name}` has been merged into the default branch — the normal post-migration flow
 
 Check `spec/roadmap.md` for `status: built` entries first (no API call needed). Then use the GitHub branches API to check for merged `feature/` branches for the remaining features.
@@ -56,7 +56,7 @@ Show a clear summary:
 **Ready to build** (frontier): list feature names and what they unlock next
 **Blocked** (dependencies not yet met): list feature names and what they're waiting for
 
-If the frontier is empty and nothing is in progress, tell the founder: all planned features are either built or blocked — run `/plan` to plan more features, or check if in-progress work needs attention.
+If the frontier is empty and nothing is in progress, tell the founder: all planned features are either built or blocked — run `/framework-plan` to plan more features, or check if in-progress work needs attention.
 
 If there are items on the frontier, propose a build batch. Default to all frontier items in parallel. If the frontier is large (more than 4-5 features), suggest a sensible first batch and explain what to defer.
 
@@ -112,7 +112,7 @@ For each PR, provide:
 - One-sentence summary of what was implemented
 - Confirmation that QA and Security signed off
 
-Tell the founder: "Review and merge these PRs. When you're ready for the next batch, run `/build` again."
+Tell the founder: "Review and merge these PRs. When you're ready for the next batch, run `/framework-build` again."
 
 ---
 

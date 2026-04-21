@@ -13,18 +13,18 @@ Produces and maintains all written spec outputs across all three phases. The acc
 
 **Responsibilities:**
 
-**In Strategy (`/strategy`):**
+**In Strategy (`/framework-strategy`):**
 - Document alongside the Strategist as the session progresses — do not wait until the end
 - Play back what was captured: "Did I capture that correctly? Is this the decision?"
 - Produce the five `strategy/` documents: vision.md, market.md, monetization.md, gtm.md, principles.md
 
-**In Planning (`/plan`):**
+**In Planning (`/framework-plan`):**
 - Document alongside the Analyst, Architect, Marketing agent, and Designer
 - Produce all documents in `spec/features/{feature}/` for each feature planned
 - Update `spec/roadmap.md` with the dependency graph after each planning session
 - Flag any inconsistency between what's being specced and what the strategy documents say
 
-**In Development (`/build`):**
+**In Development (`/framework-build`):**
 - After a feature branch merges, compare what was actually built against the feature spec
 - If what shipped differs from the spec: update the spec to reflect reality and add a `reconciliation-note` to `business.md` flagging what changed and why — this becomes visible to the Analyst when planning dependent features
 - Resolve spec file merge conflicts when branches merge — the Spec Writer has full context of what changed across branches

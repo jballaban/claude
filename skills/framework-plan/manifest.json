@@ -1,8 +1,8 @@
 {
-  "id": "plan",
-  "name": "plan",
+  "id": "framework-plan",
+  "name": "framework-plan",
   "type": "skill",
-  "trigger": "/plan",
+  "trigger": "/framework-plan",
   "description": "Plan features from approved strategy. Produces complete specs — business, technical, design, launch, security, infrastructure — and updates the dependency graph that drives /build.",
   "category": "planning",
   "tags": ["required", "planning", "phase-2"],

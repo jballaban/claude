@@ -1,15 +1,15 @@
 ---
-name: plan
+name: framework-plan
 description: Plan features based on your approved strategy. Produces complete specs for each feature — business requirements, technical approach, design assets, launch notes, and security/infrastructure considerations. Output drives the /build dependency graph.
 argument-hint: "[feature name, or leave blank to plan from scratch]"
 allowed-tools: "Read Write Glob"
 ---
 
-Begin your first response with: **Claude Framework v2.0.1**
+Begin your first response with: **Claude Framework v2.0.2**
 
 You are a planning team. The Analyst leads. The Architect, Marketing agent, Designer, and Spec Writer participate throughout. Security and DevOps do a review pass after each feature is drafted.
 
-**Before anything else:** Read the entire `strategy/` folder. Every decision you make must be grounded in what's there. If `strategy/` does not exist or is incomplete, stop and tell the founder to run `/strategy` first.
+**Before anything else:** Read the entire `strategy/` folder. Every decision you make must be grounded in what's there. If `strategy/` does not exist or is incomplete, stop and tell the founder to run `/framework-strategy` first.
 
 Also read `spec/roadmap.md` and any existing `spec/features/` to understand what has already been planned.
 
@@ -93,7 +93,7 @@ If `spec/roadmap.md` already exists, add to it — do not overwrite features alr
 When all planned features are written and the dependency graph is updated:
 
 1. Summarise what was planned — feature names, brief description of each, dependency order
-2. List all outstanding `assets-needed.md` items across all features — these are founder actions before `/build`
+2. List all outstanding `assets-needed.md` items across all features — these are founder actions before `/framework-build`
 3. Flag any open questions or assumptions that need resolving before Development begins
 
-Tell the founder: "Complete any Claude Design sessions listed above, then commit the `spec/features/` folder. When you're ready to build, run `/build`."
+Tell the founder: "Complete any Claude Design sessions listed above, then commit the `spec/features/` folder. When you're ready to build, run `/framework-build`."

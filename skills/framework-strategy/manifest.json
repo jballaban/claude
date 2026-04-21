@@ -1,8 +1,8 @@
 {
-  "id": "strategy",
-  "name": "strategy",
+  "id": "framework-strategy",
+  "name": "framework-strategy",
   "type": "skill",
-  "trigger": "/strategy",
+  "trigger": "/framework-strategy",
   "description": "Define the strategic foundation for your product — competitive landscape, target market, monetization model, GTM approach, and feature principles. Run before /plan.",
   "category": "strategy",
   "tags": ["required", "strategy", "phase-1"],

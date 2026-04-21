@@ -1,17 +1,17 @@
 ---
-name: migrate
+name: framework-migrate
 description: Migrate an existing repository into the framework. Reads the codebase and populates context files, feature specs, and roadmap from what already exists. Does not ask questions — gaps are left for /strategy, /plan, and /build to handle. Run once after installing the plugin on an existing project.
 argument-hint: ""
 allowed-tools: "Read Write Glob WebSearch WebFetch mcp__github__list_branches mcp__github__get_file_contents"
 ---
 
-Begin your first response with: **Claude Framework v2.0.1**
+Begin your first response with: **Claude Framework v2.0.2**
 
 You are running a one-time migration. Your job is to extract what already exists in this repository, place it into the framework's structure, and then remove the source files so the repo is left in exactly the state it would be in if this project had started with the framework from day one. No duplication. No leftover docs.
 
 You do not invent information. You leave gaps blank — the downstream skills (/strategy, /plan, /build) will handle them through their normal processes.
 
-**Strategy questions are not your job.** You do not ask about monetization, GTM, target market, success metrics, non-goals, or any other strategic topic — even if the code cannot answer them. Leave those `strategy/` files empty or omit them entirely. `/strategy` will handle them. The only questions you ask are operational ones: where does this content belong, or is this file safe to delete.
+**Strategy questions are not your job.** You do not ask about monetization, GTM, target market, success metrics, non-goals, or any other strategic topic — even if the code cannot answer them. Leave those `strategy/` files empty or omit them entirely. `/framework-strategy` will handle them. The only questions you ask are operational ones: where does this content belong, or is this file safe to delete.
 
 **When operationally uncertain, stop and ask.** If you cannot determine where a piece of content should go, or whether a file is safe to delete, pause and ask the founder. Do not ask strategy questions. Do not speculate.
 
@@ -182,4 +182,4 @@ Summarise what was done:
 
 Then tell the founder:
 
-"Migration complete. The repo is now in framework state — all documentation lives in `spec/`, `CLAUDE.md` is clean, and source files have been removed. Review the spec files and fill in any blank sections you care about. When ready, run `/strategy` to establish the strategic foundation — it will work from what's already here and only ask about genuine gaps."
+"Migration complete. The repo is now in framework state — all documentation lives in `spec/`, `CLAUDE.md` is clean, and source files have been removed. Review the spec files and fill in any blank sections you care about. When ready, run `/framework-strategy` to establish the strategic foundation — it will work from what's already here and only ask about genuine gaps."

@@ -1,8 +1,8 @@
 {
-  "id": "build",
-  "name": "build",
+  "id": "framework-build",
+  "name": "framework-build",
   "type": "skill",
-  "trigger": "/build",
+  "trigger": "/framework-build",
   "description": "Build the next features in the dependency graph. Reads spec/roadmap.md and GitHub branch state, opens issues, implements in parallel, waits for founder to merge PRs. Re-run to advance.",
   "category": "development",
   "tags": ["required", "development", "phase-3"],

@@ -10,7 +10,7 @@ All agents are installed as a set. Individual agents can be swapped for custom i
 
 | Agent | Model | Role |
 |-------|-------|------|
-| [Strategist](strategist/agent.md) | claude-opus-4-7 | Defines business foundation — competitive landscape, target market, monetization model, GTM strategy, and feature principles. Leads `/strategy` sessions. |
+| [Strategist](strategist/agent.md) | claude-opus-4-7 | Defines business foundation — competitive landscape, target market, monetization model, GTM strategy, and feature principles. Leads `/framework-strategy` sessions. |
 
 ## Phase 2 — Planning
 
@@ -40,7 +40,7 @@ All agents are installed as a set. Individual agents can be swapped for custom i
 
 ## Agent participation by phase
 
-| Agent | `/strategy` | `/plan` | `/build` |
+| Agent | `/framework-strategy` | `/framework-plan` | `/framework-build` |
 |-------|-------------|---------|----------|
 | Strategist | ✓ leads | — | — |
 | Analyst | — | ✓ leads | — |

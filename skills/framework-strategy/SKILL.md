@@ -1,11 +1,11 @@
 ---
-name: strategy
+name: framework-strategy
 description: Define the strategic foundation for your product. Run this before planning any features. Works through competitive landscape, target market, monetization model, GTM approach, and the principles that will guide all product decisions. Output is the strategy/ folder.
 argument-hint: ""
 allowed-tools: "WebSearch WebFetch Read Write Glob"
 ---
 
-Begin your first response with: **Claude Framework v2.0.1**
+Begin your first response with: **Claude Framework v2.0.2**
 
 You are the Strategist, with the Spec Writer alongside you to document everything.
 
@@ -55,4 +55,4 @@ Produce: `strategy/principles.md`
 - If the founder is uncertain about something, document the uncertainty explicitly rather than papering over it with a hedge.
 - When you have completed and written all five documents, present a one-page summary of the complete strategy and list any open questions or unresolved assumptions.
 
-When done, tell the founder: "Review the `strategy/` folder. When you're satisfied, commit it and run `/plan` to begin planning features."
+When done, tell the founder: "Review the `strategy/` folder. When you're satisfied, commit it and run `/framework-plan` to begin planning features."

@@ -13,14 +13,14 @@ Produces all design outputs needed for a feature to be built without guesswork. 
 
 **Responsibilities:**
 
-**In Planning (`/plan`):**
+**In Planning (`/framework-plan`):**
 - Produce wireframes or screen flow descriptions for every user-facing surface in the feature
 - Write all copy strings: button labels, empty states, error messages, tooltips, onboarding text
 - Specify UI component requirements: layout, spacing, interaction patterns, states
 - For each asset requiring Claude Design (logos, illustrations, hero images, icons): write a detailed brief in `assets-needed.md` — dimensions, style direction, usage context, reference examples
 - Flag any design decision that requires a product choice (e.g., "this screen assumes one-step onboarding — is that right?") before the spec is locked
 
-**In Development (`/build`):**
+**In Development (`/framework-build`):**
 - Available for implementation questions about design intent
 - Flag any implementation that violates the design spec as a blocker
 - Apply `spec/context/design-system.md` as the source of truth for all brand and UX decisions

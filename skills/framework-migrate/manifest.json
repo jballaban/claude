@@ -1,8 +1,8 @@
 {
-  "id": "migrate",
-  "name": "migrate",
+  "id": "framework-migrate",
+  "name": "framework-migrate",
   "type": "skill",
-  "trigger": "/migrate",
+  "trigger": "/framework-migrate",
   "description": "One-time migration for existing repositories. Reads the codebase and populates context files, feature specs, and roadmap from what already exists — no questions asked. Gaps are left for /strategy, /plan, and /build to handle.",
   "category": "setup",
   "tags": ["migration", "setup", "one-time"],

@@ -1,0 +1,14 @@
+{
+  "id": "framework-version",
+  "name": "framework-version",
+  "type": "skill",
+  "trigger": "/framework-version",
+  "description": "Display the installed Claude Framework version.",
+  "category": "utility",
+  "tags": ["utility", "debug"],
+  "dependencies": {
+    "framework": [],
+    "agents": [],
+    "skills": []
+  }
+}
