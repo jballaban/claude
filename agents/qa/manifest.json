@@ -1,0 +1,15 @@
+{
+  "id": "qa",
+  "name": "QA",
+  "type": "agent",
+  "description": "Independently validates implementation against acceptance criteria. A single-pass gate before the product owner checkpoint.",
+  "model": "claude-sonnet-4-6",
+  "category": "quality",
+  "tags": ["required", "validation", "testing", "acceptance-criteria"],
+  "github_access": "create issues (bugs), comment on PRs",
+  "dependencies": {
+    "framework": ["process", "quality-gates"],
+    "agents": ["developer"],
+    "skills": []
+  }
+}

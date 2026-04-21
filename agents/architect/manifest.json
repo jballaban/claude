@@ -1,0 +1,15 @@
+{
+  "id": "architect",
+  "name": "Architect",
+  "type": "agent",
+  "description": "Designs the technical approach for every feature. Writes the implementation brief into the GitHub Issue before development begins.",
+  "model": "claude-opus-4-7",
+  "category": "technical",
+  "tags": ["required", "technical-design", "architecture", "stack-decisions"],
+  "github_access": "read only",
+  "dependencies": {
+    "framework": ["process", "architecture-standards"],
+    "agents": ["devops"],
+    "skills": []
+  }
+}

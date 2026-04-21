@@ -1,0 +1,15 @@
+{
+  "id": "marketing",
+  "name": "Marketing",
+  "type": "agent",
+  "description": "Owns go-to-market strategy and positioning. Sets strategic direction for the Designer. Engaged for user-facing features and launches.",
+  "model": "claude-sonnet-4-6",
+  "category": "strategy",
+  "tags": ["optional", "marketing", "positioning", "go-to-market", "user-facing"],
+  "github_access": "read only",
+  "dependencies": {
+    "framework": ["process"],
+    "agents": ["designer"],
+    "skills": []
+  }
+}

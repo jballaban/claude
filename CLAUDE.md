@@ -6,22 +6,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-This is a reusable Claude Code framework — a defined process, agent team, and set of standards for building software products using Claude as the primary development team. It is not a product itself.
+This is a **marketplace of agents and skills** for building software products with Claude Code. It is not a product itself.
 
-You take the files from this repo, drop them into a new project with `scripts/install.sh`, and your project immediately has a structured agent workflow, consistent SOPs, and opinionated architecture standards.
+**Skills** are Claude Code's native plugin mechanism — slash commands installed into `.claude/skills/`. **Agents** are the context those skills depend on — role definitions loaded into CLAUDE.md so Claude knows how to behave when a skill invokes a role.
 
-Improvements made here benefit every project that adopts the framework when they next run the install script.
+The install script handles both layers. Run it once in a new project and you have a working team.
 
 ---
 
-## How to adopt this framework in a new project
+## How the two layers work
 
-```bash
-# From the root of your target repository
-bash path/to/claude-framework/scripts/install.sh
+```
+Skills (.claude/skills/)          — the plugin layer
+  └── /pending                    — invokes the Orchestrator agent
+        └── depends on →
+
+Agent context (.claude/framework/agents.md)  — the context layer
+  └── Orchestrator, Analyst, Architect, Developer, ...
 ```
 
-Then fill in the generated template files:
+Skills are Claude Code plugins: user-invocable slash commands. They invoke agents by role. For that to work, the agent definitions must be present in context — loaded via CLAUDE.md `@` includes. The plugin install handles both layers.
+
+---
+
+## Installation
+
+### Prerequisites
+
+- Claude Code CLI installed
+- Git
+- A GitHub token in your environment (`GITHUB_TOKEN`) for GitHub MCP access
+
+### Install into a new project
+
+```
+/plugin install claude-framework@claude-plugins-official
+```
+
+The plugin installs all 10 agents and all skills into your project in one step.
+
+### After installation
+
+Fill in the generated context files:
 
 | File | What to fill in |
 |------|----------------|
@@ -34,11 +60,27 @@ Then fill in the generated template files:
 | `spec/current/overview.md` | What is live in production right now |
 | `spec/next/overview.md` | What the next major release will contain |
 
+### Verify the installation
+
+```bash
+/pending
+```
+
+If `/pending` responds, both layers are working — the skill is installed and the agent context is loaded.
+
+### Updating an existing project
+
+```
+/plugin update claude-framework
+```
+
+`spec/` is never overwritten. All project-specific work is preserved.
+
 ---
 
 ## How the framework works
 
-The product owner interacts exclusively through Claude. Claude acts as the **Orchestrator** — an administrative coordinator that routes work to a team of specialist agents and enforces the process defined in `.claude/framework/`.
+The product owner interacts exclusively through Claude. Skills are the entry points. The first skill most projects use is `/pending`.
 
 **Agent team:** Orchestrator, Analyst, Spec Writer, Architect, Developer, Designer, Marketing, QA, DevOps, Security
 
@@ -48,35 +90,50 @@ The product owner interacts exclusively through Claude. Claude acts as the **Orc
 1. After the Analyst produces a spec — approve before development begins
 2. After QA and Security sign off — approve before deployment
 
-Run `/pending` at any time to see everything waiting on you.
-
-**GitHub is read-only for the product owner.** Issues and PRs are outputs of the process — created and managed by agents. The product owner does not create issues directly.
+**GitHub is read-only for the product owner.** Issues and PRs are outputs of the process — created and managed by agents.
 
 ---
 
-## Repository structure
+## Marketplace structure
 
 ```
-.claude/
-  framework/          # Non-negotiable — process, agents, quality gates, architecture principles
-  defaults/           # Team defaults — stack choices, conventions, pattern references
-  skills/pending/     # /pending slash command
+.claude-plugin/
+  plugin.json           # Plugin metadata — id, agents, skills
+
+agents/
+  _index.md             # Browse all agents
+  {agent}/
+    agent.md            # Agent definition — role, model, responsibilities
+    manifest.json       # Metadata — category, tags, dependencies
+
+skills/
+  _index.md             # Browse all skills
+  {skill}/
+    SKILL.md            # Claude Code skill definition (slash command)
+    manifest.json       # Metadata — trigger, dependencies on agents
+
+framework/
+  process.md            # Workflow patterns, checkpoints, feedback loops
+  quality-gates.md      # 4 gates that must pass before deployment
+  architecture-standards.md  # Universal engineering principles
+
+defaults/
+  stack.md              # Team technology choices (AWS, TypeScript, Next.js, etc.)
+  patterns.md           # Authoritative references and team decisions
+
 templates/
-  CLAUDE.md           # Project CLAUDE.md template (copied to target repos)
-  spec/context/       # Project context file templates
-spec/
-  current/            # Spec for what is live — maintained by Spec Writer
-  next/               # Spec for the next major release — maintained by Spec Writer
-scripts/
-  install.sh          # Copies framework into a target repository
+  CLAUDE.md             # Project CLAUDE.md template — loads agent context via @includes
+  spec/context/         # Project context file templates
+
+catalog.md              # Root marketplace index
 ```
 
 ---
 
 ## Contributing improvements
 
-When you learn something working in a project — a better process step, a missing quality gate, a wrong default, a new team decision — improve it here. Run `install.sh` in your projects to pull in the update.
+When you learn something working in a project — a better process step, a missing quality gate, a wrong default, a new team decision — improve it here.
 
-**Always overwritten by `install.sh`:** `.claude/framework/`, `.claude/defaults/`, `.claude/skills/`, `CLAUDE.md`
+**To add a new agent:** create `agents/{name}/agent.md` + `manifest.json`, add to `.claude-plugin/plugin.json`.
 
-**Never overwritten by `install.sh`:** `spec/` — preserves all project-specific work.
+**To add a new skill:** create `skills/{name}/SKILL.md` + `manifest.json`, add to `.claude-plugin/plugin.json`. Declare which agents the skill depends on in `manifest.json`.

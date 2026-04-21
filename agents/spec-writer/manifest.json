@@ -1,0 +1,15 @@
+{
+  "id": "spec-writer",
+  "name": "Spec Writer",
+  "type": "agent",
+  "description": "Maintains the spec/ folder as the living source of truth. Works alongside the Analyst; ensures spec accuracy across all branches.",
+  "model": "claude-sonnet-4-6",
+  "category": "documentation",
+  "tags": ["required", "spec", "documentation", "branch-integrity"],
+  "github_access": "read only",
+  "dependencies": {
+    "framework": ["process"],
+    "agents": ["analyst"],
+    "skills": []
+  }
+}

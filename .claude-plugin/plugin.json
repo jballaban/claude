@@ -1,0 +1,21 @@
+{
+  "id": "claude-framework",
+  "name": "Claude Framework — Full Team",
+  "version": "1.0.0",
+  "description": "A full software development team for Claude Code. 10 specialist agents and workflow skills for building products end-to-end — from spec through deployment.",
+  "agents": [
+    "agents/orchestrator",
+    "agents/analyst",
+    "agents/architect",
+    "agents/developer",
+    "agents/designer",
+    "agents/marketing",
+    "agents/qa",
+    "agents/devops",
+    "agents/security",
+    "agents/spec-writer"
+  ],
+  "skills": [
+    "skills/pending"
+  ]
+}

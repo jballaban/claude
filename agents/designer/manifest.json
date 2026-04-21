@@ -1,0 +1,15 @@
+{
+  "id": "designer",
+  "name": "Designer",
+  "type": "agent",
+  "description": "Owns the design system. Executes brand, copy, UX, and asset work within Marketing's strategic direction.",
+  "model": "claude-sonnet-4-6",
+  "category": "design",
+  "tags": ["optional", "design", "ux", "copy", "brand", "user-facing"],
+  "github_access": "read only",
+  "dependencies": {
+    "framework": ["process"],
+    "agents": ["marketing"],
+    "skills": []
+  }
+}

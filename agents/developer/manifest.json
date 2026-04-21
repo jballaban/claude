@@ -1,0 +1,15 @@
+{
+  "id": "developer",
+  "name": "Developer",
+  "type": "agent",
+  "description": "Implements features and fixes test-first against the Architect's technical spec in the GitHub Issue.",
+  "model": "claude-sonnet-4-6",
+  "category": "implementation",
+  "tags": ["required", "implementation", "testing", "pr"],
+  "github_access": "create branches, create PRs",
+  "dependencies": {
+    "framework": ["process", "architecture-standards"],
+    "agents": ["architect", "qa"],
+    "skills": []
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "pending",
+  "name": "pending",
+  "type": "skill",
+  "trigger": "/pending",
+  "description": "Surface all items waiting for product owner input — checkpoint approvals, Analyst questions, and Architect escalations.",
+  "category": "workflow",
+  "tags": ["required", "checkpoints", "workflow", "product-owner"],
+  "dependencies": {
+    "framework": ["process"],
+    "agents": ["orchestrator"],
+    "skills": []
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "security",
+  "name": "Security",
+  "type": "agent",
+  "description": "Independently validates code and infrastructure against OWASP Top 10 and security standards. A gate before Checkpoint 2.",
+  "model": "claude-opus-4-7",
+  "category": "quality",
+  "tags": ["required", "security", "owasp", "code-review", "infrastructure-review"],
+  "github_access": "read only",
+  "dependencies": {
+    "framework": ["process", "quality-gates", "architecture-standards"],
+    "agents": [],
+    "skills": []
+  }
+}

@@ -2,7 +2,7 @@
 
 > **These are this team's opinionated technology defaults. The Architect and DevOps follow these without debate unless the project's `conventions.md` explicitly overrides a specific item with a documented reason.**
 >
-> **If you are adopting this framework for a different team or stack, replace the contents of this file. The principles in `.claude/framework/architecture-standards.md` still apply.**
+> **If you are adopting this framework for a different team or stack, replace the contents of this file. The principles in `framework/architecture-standards.md` still apply.**
 
 ---
 

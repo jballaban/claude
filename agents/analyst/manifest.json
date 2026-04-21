@@ -1,0 +1,15 @@
+{
+  "id": "analyst",
+  "name": "Analyst",
+  "type": "agent",
+  "description": "Owns the business specification. Refines raw requests into approved specs with acceptance criteria before any development begins.",
+  "model": "claude-opus-4-7",
+  "category": "strategy",
+  "tags": ["required", "spec", "requirements", "business"],
+  "github_access": "create/update issues",
+  "dependencies": {
+    "framework": ["process"],
+    "agents": ["spec-writer"],
+    "skills": []
+  }
+}

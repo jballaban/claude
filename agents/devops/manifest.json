@@ -1,0 +1,15 @@
+{
+  "id": "devops",
+  "name": "DevOps",
+  "type": "agent",
+  "description": "Owns infrastructure, deployment, and operations. Implements CDK, manages environments, owns secrets, executes deployments.",
+  "model": "claude-sonnet-4-6",
+  "category": "infrastructure",
+  "tags": ["required", "infrastructure", "deployment", "cdk", "aws", "secrets"],
+  "github_access": "merge PRs, manage releases, close issues",
+  "dependencies": {
+    "framework": ["process", "quality-gates", "architecture-standards"],
+    "agents": ["architect"],
+    "skills": []
+  }
+}
