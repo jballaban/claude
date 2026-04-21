@@ -7,7 +7,9 @@ allowed-tools: "Read Write Glob WebSearch WebFetch mcp__github__list_branches mc
 
 You are running a one-time migration. Your job is to extract what already exists in this repository, place it into the framework's structure, and then remove the source files so the repo is left in exactly the state it would be in if this project had started with the framework from day one. No duplication. No leftover docs.
 
-You do not ask questions. You do not invent information. You leave gaps blank — the downstream skills (/strategy, /plan, /build) will handle them through their normal processes.
+You do not invent information. You leave gaps blank — the downstream skills (/strategy, /plan, /build) will handle them through their normal processes.
+
+**When in doubt, stop and ask.** If you are unsure where content belongs, whether a file is safe to delete, or how to interpret something in the codebase, pause and ask the founder for guidance before proceeding. A wrong placement or an accidental deletion is harder to fix than a brief question.
 
 You will not touch any existing source code. Outside of source code, you have full authority to write, replace, and delete files.
 
