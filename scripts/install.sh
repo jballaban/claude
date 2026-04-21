@@ -16,6 +16,7 @@ mkdir -p \
   "$TARGET_DIR/.claude/framework" \
   "$TARGET_DIR/.claude/defaults" \
   "$TARGET_DIR/.claude/skills/pending" \
+  "$TARGET_DIR/.claude/skills/conform" \
   "$TARGET_DIR/spec/context" \
   "$TARGET_DIR/spec/current" \
   "$TARGET_DIR/spec/next"
@@ -27,6 +28,7 @@ cp "$FRAMEWORK_DIR/.claude/framework/process.md"                "$TARGET_DIR/.cl
 cp "$FRAMEWORK_DIR/.claude/framework/quality-gates.md"          "$TARGET_DIR/.claude/framework/quality-gates.md"
 cp "$FRAMEWORK_DIR/.claude/framework/architecture-standards.md" "$TARGET_DIR/.claude/framework/architecture-standards.md"
 cp "$FRAMEWORK_DIR/.claude/skills/pending/SKILL.md"             "$TARGET_DIR/.claude/skills/pending/SKILL.md"
+cp "$FRAMEWORK_DIR/.claude/skills/conform/SKILL.md"             "$TARGET_DIR/.claude/skills/conform/SKILL.md"
 
 # Copy team defaults (always overwrite — update here to change team-wide stack choices)
 echo "Copying team defaults..."
@@ -66,8 +68,6 @@ copy_if_missing "$FRAMEWORK_DIR/spec/next/overview.md"                      "$TA
 
 echo ""
 echo "Done. Next steps:"
-echo "  1. Fill in spec/context/*.md with your project details"
-echo "  2. Update spec/current/overview.md with what is live"
-echo "  3. Update spec/next/overview.md with your next release goals"
-echo "  4. Set GITHUB_TOKEN in your environment for MCP GitHub access"
-echo "  5. Run 'claude mcp list' to verify the GitHub MCP server is connected"
+echo "  1. Set GITHUB_TOKEN in your environment for MCP GitHub access"
+echo "  2. Run 'claude mcp list' to verify the GitHub MCP server is connected"
+echo "  3. Open Claude and run /conform to complete setup"
