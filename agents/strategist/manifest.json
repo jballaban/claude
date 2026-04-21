@@ -1,0 +1,15 @@
+{
+  "id": "strategist",
+  "name": "Strategist",
+  "type": "agent",
+  "description": "Defines business foundation — competitive landscape, target market, monetization model, GTM strategy, and the principles that will guide all feature decisions.",
+  "model": "claude-opus-4-7",
+  "category": "strategy",
+  "tags": ["required", "strategy", "business-model", "monetization", "gtm", "market-research"],
+  "github_access": "none",
+  "dependencies": {
+    "framework": [],
+    "agents": ["spec-writer"],
+    "skills": []
+  }
+}

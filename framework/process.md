@@ -1,145 +1,94 @@
 # Process
 
-> **This process is mandatory. Project context and specs inform what agents work on — they do not change when agents are involved, when checkpoints occur, or how feedback loops are handled.**
+Three phases. Each phase gates the next. The founder runs a skill to enter a phase, iterates until satisfied, then commits the output before advancing.
 
 ---
 
-## Entry Point
+## Phase 1 — Strategy (`/strategy`)
 
-All requests come from the product owner through Claude to the Orchestrator. The product owner does not initiate work by creating GitHub issues directly. GitHub issues are outputs of this process, not inputs.
+**Entry:** Founder runs `/strategy` with a product idea or existing context.
 
-When the product owner opens Claude and describes what they want, the Orchestrator receives it and begins the appropriate workflow.
+**Who:** Strategist leads. Spec Writer documents.
 
----
+**What happens:** Structured conversation working through five strategic domains — vision, market, monetization, GTM, and principles. The Strategist stress-tests assumptions and produces one document per domain.
 
-## Branch Model
+**Output:** `strategy/` folder — five documents that constitute the complete strategic foundation.
 
-All work targets one of two branches:
-
-| Branch | Environment | Purpose |
-|--------|-------------|---------|
-| `main` | Production | Work that launches as soon as it is ready |
-| `next` | Staging | Work held for the next major release |
-
-The Orchestrator determines target branch based on the Analyst's spec. When ambiguous, it surfaces the question to the product owner before proceeding.
-
-The Orchestrator maintains awareness of all in-flight work on both branches and flags potential conflicts to the Architect.
+**Gate:** Founder reviews and commits `strategy/`. Phase 2 cannot begin without an approved `strategy/` folder.
 
 ---
 
-## Human Checkpoints
+## Phase 2 — Planning (`/plan`)
 
-Two checkpoints are mandatory for every workflow. A third is Architect-initiated.
+**Entry:** Founder runs `/plan` with a feature name or set of features to plan.
 
-**Checkpoint 1 — After Analyst:** Product owner approves the business spec before any design or development work begins. Nothing proceeds without this approval.
+**Who:** Analyst leads. Architect, Marketing agent, Designer, and Spec Writer participate throughout. Security and DevOps do a review pass after each feature is drafted.
 
-**Checkpoint 2 — Before DevOps ships:** Product owner reviews the finished work (PR, summary of changes, QA and Security sign-off) before deployment. This is the final go/no-go.
+**Prerequisite:** `strategy/` folder must exist and be committed. The Analyst reads it before any spec work begins.
 
-**Checkpoint 3 (conditional) — Architect escalation:** The Architect raises this when uncertain about an approach or proposing something new to the stack. The product owner is pulled in to decide before development continues.
+**What happens:** For each feature, the team works through business requirements, technical approach, design, launch strategy, security requirements, and infrastructure needs — simultaneously, not sequentially. The Spec Writer produces all written output. Security and DevOps review each completed draft and document their requirements directly into the spec.
 
----
+**Output per feature:** `spec/features/{feature}/` — seven documents covering every aspect Development needs.
 
-## Workflow Patterns
+**Output for the session:** `spec/roadmap.md` — dependency graph updated with all newly planned features.
 
-The Orchestrator selects the appropriate pattern based on the nature of the request. Agents marked **(parallel)** are engaged simultaneously; their outputs are collected and routed back to the Analyst to merge into a single updated spec before work continues.
+**Claude Design assets:** The Designer produces briefs for assets requiring Claude Design sessions. These are listed in `assets-needed.md` per feature. The founder completes these sessions and places assets in `spec/features/{feature}/assets/` before the feature enters Development.
 
-### New Feature
-
-1. **Analyst + Spec Writer** — refine requirements, produce business spec with acceptance criteria, target branch
-2. ⛔ **Checkpoint 1:** Product owner approves spec
-3. **Architect + Designer + Marketing** *(parallel)* — technical approach, design/copy spec, positioning and marketing requirements
-4. *Architect escalates to product owner if uncertain or introducing new stack element (Checkpoint 3)*
-5. **Spec Writer** — updates spec to reflect approved design and technical decisions
-6. **Developer** — implementation (test-first; unit tests included)
-7. **QA + Security** *(parallel)* — independent validation and code security review
-8. *If QA or Security fails: task returns to Developer; loop until sign-off*
-9. **DevOps** — deploy to feature environment; Security reviews infrastructure post-deployment
-10. **Spec Writer** — reconciles spec against what was built
-11. ⛔ **Checkpoint 2:** Product owner reviews and approves
-12. **DevOps** — merge PR; CI deploys to production (`main`) or staging (`next`)
-
-### Bug Fix
-
-1. **Analyst + Spec Writer** — confirm and scope the bug; document in spec
-2. **Architect** — assess for systemic cause before any fix is written
-3. *Architect escalates to product owner if systemic issue found (Checkpoint 3)*
-4. **Developer** — fix implementation (unit tests included)
-5. **QA** — regression validation
-6. *If QA fails: task returns to Developer*
-7. **Security** — code review
-8. ⛔ **Checkpoint 2:** Product owner reviews and approves
-9. **DevOps** — merge PR; CI deploys
-
-### Copy / Content Change
-
-1. **Analyst + Spec Writer** — confirm scope
-2. **Marketing** — positioning and strategic direction
-3. **Designer** — produce updated copy and assets within Marketing's direction
-4. **Developer** — implement
-5. **Spec Writer** — reconciles spec against what was built (design system, product description if affected)
-6. ⛔ **Checkpoint 2:** Product owner reviews and approves
-7. **DevOps** — merge PR; CI deploys
-
-### Infrastructure Change
-
-1. **Analyst + Spec Writer** — confirm scope and risk
-2. **Architect + DevOps** *(parallel)* — design approach; assess operational constraints, cost, rollback strategy
-3. *Either party escalates to product owner if they cannot reach consensus or if risk warrants it*
-4. **DevOps** — CDK implementation
-5. **Security** — infrastructure review
-6. **Spec Writer** — updates `spec/context/architecture.md` and `spec/context/environments.md` to reflect the changes
-7. ⛔ **Checkpoint 2:** Product owner reviews and approves
-8. **DevOps** — deploy; Security reviews post-deployment
+**Gate:** Founder reviews all feature specs, completes Claude Design sessions, and commits `spec/features/` and `spec/roadmap.md`. `/build` will not proceed on a feature with unresolved `assets-needed.md` items.
 
 ---
 
-## Feedback Loops
+## Phase 3 — Development (`/build`)
 
-When any agent discovers a problem during implementation or review that requires changing the business spec (the WHAT):
+**Entry:** Founder runs `/build`. No argument needed — the skill reads state automatically.
 
-1. Agent reports the problem to the Orchestrator with full context
-2. Orchestrator routes to **Analyst** with the problem description
-3. Analyst coordinates whatever specialists are needed (Designer, Architect, Marketing, etc.)
-4. **Spec Writer** updates the spec to reflect the change
-5. Orchestrator routes the updated spec back to the blocked agent
-6. Work resumes from the point of interruption
+**Who:** Developer implements. QA and Security gate. DevOps handles infrastructure. Spec Writer reconciles after merge.
 
-Agents do not resolve business spec gaps themselves. They do not contact other agents directly.
+**Prerequisite:** `spec/roadmap.md` must exist. Feature specs must be committed and complete (no unresolved assets).
 
-**HOW changes** (purely technical implementation decisions) stay within the Architect/Developer pair and are documented in the GitHub Issue. These do not route back to the Analyst.
+**What happens:**
 
----
+1. `/build` reads `spec/roadmap.md` and GitHub merged branch state to compute the frontier — features whose dependencies are all built and that have no open issue yet.
+2. Founder confirms the batch to build (default: all frontier features in parallel).
+3. GitHub issues are created with full spec context — business, technical, design, launch, security, and infrastructure all in one issue.
+4. Developer implements each feature on branch `feature/{name}`, test-first.
+5. QA validates against acceptance criteria. Security reviews the PR. Both must sign off.
+6. Founder reviews the ready PRs and merges them.
+7. Spec Writer compares what was built against the spec. Discrepancies are noted in `business.md` as reconciliation notes.
+8. Founder runs `/build` again — the graph has advanced, new frontier is computed.
 
-## GitHub Issue Lifecycle
-
-- **Orchestrator** creates an issue when work begins on a request
-- Issue title = the request; body contains the business spec summary (from Analyst) and the technical engagement spec (from Architect)
-- Issue is updated at each major workflow step with status
-- **Spec Writer** ensures the `spec/` folder reflects the issue content on the working branch
-- Bugs found by QA are tracked as separate child issues linked to the parent
-- **DevOps** closes the issue when deployment is confirmed
+**Gate:** Founder reviews and merges PRs. Agents do not merge.
 
 ---
 
-## Ephemeral Feature Environments
+## Human checkpoints
 
-For every feature branch that requires AWS infrastructure to test:
-
-1. **DevOps** spins up a scoped CDK stack for the branch
-2. Developer uses this environment during implementation and testing
-3. QA validates against this environment
-4. **DevOps** tears down the environment when the branch is merged or deleted
-
-Local-first where possible — frontend can be served locally. AWS environments are spun up only when backend infrastructure is required.
+| Checkpoint | When | What the founder decides |
+|------------|------|-------------------------|
+| After `/strategy` | Before `/plan` | Is this the right strategic foundation to build from? |
+| After `/plan` (each feature) | Before `/build` on that feature | Is this spec complete and correct? Are all design assets ready? |
+| After each `/build` batch | Ongoing | Do these PRs meet the spec? Merge or send back. |
 
 ---
 
-## /pending — Surfacing Outstanding Items
+## Feedback loops
 
-When the product owner runs `/pending`, the Orchestrator:
+**Spec gap discovered during Development:** Developer raises a WHAT question (business requirement unclear or wrong) on the GitHub issue. Founder runs `/plan` to update the spec. Development resumes against the updated spec.
 
-1. Reads all open GitHub issues for the project
-2. Identifies items waiting on product owner input: Checkpoint 1 approvals, Checkpoint 2 approvals, Analyst questions, Architect escalations
-3. Presents each item with context: what it is, what decision is needed, what is blocked until resolved
-4. Collects the product owner's responses
-5. Routes each response back into the appropriate workflow step and updates the relevant GitHub issue
+**Technical constraint changes the spec:** Architect raises a HOW concern with WHAT implications (e.g., "the approach we specced requires a service that doesn't meet our compliance requirement"). Routes to Analyst via the issue. Spec updated before work continues.
+
+**Strategy changes mid-build:** Founder updates `strategy/` and runs `/plan` on affected features to propagate the change into specs before the next `/build` run.
+
+**Built reality differs from spec:** Spec Writer adds a reconciliation note to `business.md`. If the difference affects dependent features, Analyst reviews the dependent specs before their `/build` run.
+
+---
+
+## Branch model
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | Production — features targeting `main` ship as soon as they merge |
+| `next` | Staging — features targeting `next` hold for a coordinated major release |
+| `feature/{name}` | One branch per feature, created by `/build`, merged by the founder |
+
+The target branch for each feature is set in `business.md` during Planning. `/build` creates the feature branch from the correct base.

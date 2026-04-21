@@ -2,7 +2,7 @@
 
 A marketplace of agents and skills for building software products with Claude Code.
 
-**Skills** are Claude Code's native plugin mechanism — slash commands the product owner invokes. **Agents** are the context those skills depend on — role definitions loaded so Claude knows how to behave when a skill invokes a role. Both are installed together as a single plugin.
+**Skills** are Claude Code's native plugin mechanism — slash commands the founder invokes. **Agents** are the specialist roles those skills activate. Both are installed together as a single plugin.
 
 ---
 
@@ -19,30 +19,27 @@ A marketplace of agents and skills for building software products with Claude Co
 /plugin install claude-framework@claude-plugins-official
 ```
 
-Installs all 10 agents and all skills into your project in one step.
+Installs all 10 agents and all 3 skills into your project in one step.
 
 ### After installation
 
-Fill in the project context files created in `spec/context/`:
+Fill in the project context files in `spec/context/`:
 
 | File | What to fill in |
 |------|----------------|
-| `spec/context/product.md` | What the product is, who it's for, what problem it solves |
 | `spec/context/tech-stack.md` | Additional dependencies and stack overrides |
-| `spec/context/architecture.md` | How the major pieces connect |
-| `spec/context/design-system.md` | Brand guidelines, tone, colours, typography |
+| `spec/context/architecture.md` | How the major pieces connect (fill in after `/plan`) |
+| `spec/context/design-system.md` | Brand guidelines, colours, typography |
 | `spec/context/environments.md` | URLs, AWS account IDs, CI/CD setup |
 | `spec/context/conventions.md` | Project-specific patterns and stack overrides |
-| `spec/current/overview.md` | What is live in production right now |
-| `spec/next/overview.md` | What the next major release will contain |
 
 ### Verify
 
 ```
-/pending
+/strategy
 ```
 
-If `/pending` responds, both layers are working — the skill is installed and the agent context is loaded.
+If `/strategy` starts a conversation, the skill is installed and the Strategist agent is loaded.
 
 ### Update
 
@@ -50,30 +47,34 @@ If `/pending` responds, both layers are working — the skill is installed and t
 /plugin update claude-framework
 ```
 
-`spec/` is never overwritten. All project-specific work is preserved.
+`strategy/` and `spec/` are never overwritten. All project work is preserved.
 
 ---
 
 ## How it works
 
 ```
-Skills               ← what you invoke
-  /pending  ──►  Orchestrator
-                     └── Analyst, Architect, Developer, ...
-
-Agents               ← context skills depend on
-  10 specialist roles, loaded automatically by the plugin
+/strategy  →  Strategist + Spec Writer
+               └── strategy/ (vision, market, monetization, gtm, principles)
+                        ↓
+/plan      →  Analyst + Architect + Marketing + Designer + Spec Writer
+               └── spec/features/{feature}/ × N
+               └── spec/roadmap.md (dependency graph)
+                        ↓
+/build     →  Developer + QA + Security + DevOps + Spec Writer
+               └── PRs on feature/{name} branches
+               └── Founder merges → /build advances the graph
 ```
-
-Skills are entry points. Agents are the roles they invoke. The plugin installs both.
 
 ---
 
 ## Skills
 
-| Skill | Trigger | Agents used | Description |
-|-------|---------|-------------|-------------|
-| [pending](skills/pending/SKILL.md) | `/pending` | Orchestrator | Surface all items waiting for product owner input — checkpoint approvals, Analyst questions, Architect escalations. |
+| Skill | Trigger | Phase | Description |
+|-------|---------|-------|-------------|
+| [strategy](skills/strategy/SKILL.md) | `/strategy` | 1 | Define the strategic foundation — competitive landscape, target market, monetization, GTM, principles. |
+| [plan](skills/plan/SKILL.md) | `/plan` | 2 | Plan features from approved strategy. Complete specs with business, technical, design, launch, security, and infrastructure context. |
+| [build](skills/build/SKILL.md) | `/build` | 3 | Build the dependency graph frontier. Opens issues, implements in parallel, surfaces PRs for founder review. Re-run to advance. |
 
 → [Browse all skills](skills/_index.md)
 
@@ -81,18 +82,18 @@ Skills are entry points. Agents are the roles they invoke. The plugin installs b
 
 ## Agents
 
-| Agent | Model | Category | Description |
-|-------|-------|----------|-------------|
-| [Orchestrator](agents/orchestrator/agent.md) | Opus 4.7 | Coordination | Product owner's entry point. Routes requests, owns GitHub, enforces process. |
-| [Analyst](agents/analyst/agent.md) | Opus 4.7 | Strategy | Owns the business spec. Nothing gets built without an approved spec. |
-| [Architect](agents/architect/agent.md) | Opus 4.7 | Technical | Designs technical approach. Writes the implementation brief before development begins. |
-| [Developer](agents/developer/agent.md) | Sonnet 4.6 | Implementation | Implements features and fixes test-first against the Architect's spec. |
-| [Designer](agents/designer/agent.md) | Sonnet 4.6 | Design | Brand, copy, UX, and asset execution within Marketing's strategic direction. |
-| [Marketing](agents/marketing/agent.md) | Sonnet 4.6 | Strategy | Go-to-market strategy and positioning. Sets direction for user-facing features. |
-| [QA](agents/qa/agent.md) | Sonnet 4.6 | Quality | Independent acceptance criteria validation. Single-pass gate before Checkpoint 2. |
-| [DevOps](agents/devops/agent.md) | Sonnet 4.6 | Infrastructure | CDK infrastructure, deployments, environments, secrets, rollbacks. |
-| [Security](agents/security/agent.md) | Opus 4.7 | Quality | Code and infrastructure review against OWASP Top 10. Gate before Checkpoint 2. |
-| [Spec Writer](agents/spec-writer/agent.md) | Sonnet 4.6 | Documentation | Maintains spec/ as the living source of truth across all branches. |
+| Agent | Model | Phase | Description |
+|-------|-------|-------|-------------|
+| [Strategist](agents/strategist/agent.md) | Opus 4.7 | Strategy | Competitive research, business model, monetization, GTM strategy. Leads `/strategy` sessions. |
+| [Analyst](agents/analyst/agent.md) | Opus 4.7 | Planning | Leads Planning sessions. Translates strategy into feature specs with acceptance criteria. |
+| [Architect](agents/architect/agent.md) | Opus 4.7 | Planning | Technical design — data model, API contracts, implementation approach. |
+| [Marketing](agents/marketing/agent.md) | Sonnet 4.6 | Planning | Feature positioning, onboarding approach, marketing-critical requirements. |
+| [Designer](agents/designer/agent.md) | Sonnet 4.6 | Planning | Wireframes, copy strings, component specs, Claude Design asset briefs. |
+| [Developer](agents/developer/agent.md) | Sonnet 4.6 | Development | Implements features test-first against the spec. |
+| [QA](agents/qa/agent.md) | Sonnet 4.6 | Development | Independent acceptance criteria validation. Gate before PR review. |
+| [Security](agents/security/agent.md) | Opus 4.7 | Planning + Development | Security requirements in Planning; code and infrastructure review in Development. |
+| [DevOps](agents/devops/agent.md) | Sonnet 4.6 | Planning + Development | Infrastructure requirements in Planning; CDK, deployments, environments in Development. |
+| [Spec Writer](agents/spec-writer/agent.md) | Sonnet 4.6 | All phases | Documents strategy sessions, produces all spec files, reconciles specs after merge. |
 
 → [Browse all agents](agents/_index.md)
 
@@ -104,8 +105,8 @@ Non-negotiable process and engineering standards included with the plugin.
 
 | File | Description |
 |------|-------------|
-| [process.md](framework/process.md) | Workflow patterns, human checkpoints, feedback loops, GitHub issue lifecycle |
-| [quality-gates.md](framework/quality-gates.md) | 4 gates that must pass before deployment |
+| [process.md](framework/process.md) | Three-phase workflow — strategy, planning, development — with gates, feedback loops, and branch model |
+| [quality-gates.md](framework/quality-gates.md) | Gates that must pass before a PR is surfaced for founder review |
 | [architecture-standards.md](framework/architecture-standards.md) | Universal engineering principles all agents follow |
 
 ---

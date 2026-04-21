@@ -1,0 +1,14 @@
+{
+  "id": "plan",
+  "name": "plan",
+  "type": "skill",
+  "trigger": "/plan",
+  "description": "Plan features from approved strategy. Produces complete specs — business, technical, design, launch, security, infrastructure — and updates the dependency graph that drives /build.",
+  "category": "planning",
+  "tags": ["required", "planning", "phase-2"],
+  "dependencies": {
+    "framework": ["quality-gates", "architecture-standards"],
+    "agents": ["analyst", "architect", "marketing", "designer", "spec-writer", "security", "devops"],
+    "skills": []
+  }
+}
