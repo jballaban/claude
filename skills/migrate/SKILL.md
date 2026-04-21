@@ -1,71 +1,57 @@
 ---
 name: migrate
-description: Migrate an existing repository into the three-phase framework. Reconstructs strategy from the codebase and founder conversation, maps existing features into shallow spec entries, and marks everything currently in main as built. Run once after installing the plugin on an existing project.
+description: Migrate an existing repository into the framework. Reads the codebase and populates context files, feature specs, and roadmap from what already exists. Does not ask questions — gaps are left for /strategy, /plan, and /build to handle. Run once after installing the plugin on an existing project.
 argument-hint: ""
 allowed-tools: "Read Write Glob WebSearch WebFetch mcp__github__list_branches mcp__github__get_file_contents"
 ---
 
-You are running a one-time migration. Your job is to bring an existing repository into the framework without disrupting anything already built.
+You are running a one-time migration. Your job is to extract what already exists in this repository and place it into the framework's structure. You do not ask questions. You do not invent information. You leave gaps blank — the downstream skills (/strategy, /plan, /build) will handle them through their normal processes.
 
-You will not touch any existing code. You will not create branches or issues. You will only produce files in `strategy/` and `spec/`.
+You will not touch any existing source code. You will only produce or overwrite files in `spec/`, `strategy/`, and `CLAUDE.md`.
 
 ---
 
-## Step 1: Assess what already exists
+## Step 1: Read the repository
 
-Check for:
-- `strategy/` — if it exists and is populated, skip Phase A below and tell the founder
-- `spec/roadmap.md` — if it exists, skip Phase B and tell the founder
-- `spec/features/` — note any feature folders already present
+Read everything available before writing anything:
 
-Read the following to understand the project before asking any questions:
-- README and any top-level documentation files
-- Package manifests (package.json, pyproject.toml, Gemfile, etc.) for dependencies
+- `CLAUDE.md` and any top-level documentation files
+- `README` files (root and any significant subdirectories)
+- Package manifests (`package.json`, `pyproject.toml`, `Cargo.toml`, `Gemfile`, etc.)
 - Folder structure — identify major areas of the codebase
-- Any existing spec, docs, or architecture files
+- Any existing `spec/`, `docs/`, `architecture/`, or similar documentation directories
+- Environment files (`.env.example`, CI/CD configs) for deployment topology
+- Existing `strategy/` documents if present
 
-Tell the founder what you found before proceeding.
-
----
-
-## Phase A: Strategy reconstruction
-
-The Strategist leads this phase. The Spec Writer documents.
-
-You have read the codebase. You have a partial picture of the product. Your job now is to fill the gaps that cannot be inferred from code — particularly the business intent, target market, and go-to-market thinking.
-
-Do not ask about things you can already infer. Ask about what is genuinely unknown:
-
-- Who is the primary target customer? (code shows what was built; not always who it was built for)
-- What is the monetization model? (rarely visible in code)
-- What is the GTM strategy — how are customers acquired?
-- What does success look like in one to three years?
-- Are there strategic constraints — things this product will deliberately not do?
-
-Work through the five strategic domains, skipping any that are clearly answered by the code and existing docs. Produce all five `strategy/` documents. Write each document as you complete it — do not batch.
-
-Documents to produce:
-- `strategy/vision.md`
-- `strategy/market.md`
-- `strategy/monetization.md`
-- `strategy/gtm.md`
-- `strategy/principles.md`
+Tell the founder what you found before writing anything.
 
 ---
 
-## Phase B: Feature mapping
+## Step 2: Populate context files
 
-The Analyst leads this phase. The Spec Writer documents.
+Write `spec/context/` files from what you can confidently determine. Use the templates below. Leave any section blank (or omit entirely) if you cannot determine it from the existing code and docs — do not speculate.
 
-Read the codebase thoroughly. Identify the distinct features — areas of functionality that represent a meaningful unit of product value. Aim for the granularity a developer would use when describing a PR: not "the whole app" and not "this one function", but "user authentication" or "competition creation flow".
+**`spec/context/product.md`** — what the product is, for whom, and what problem it solves. Draw from README, docs, and any marketing copy in the repo.
 
-For each feature:
+**`spec/context/tech-stack.md`** — additional dependencies and services beyond the team defaults. List significant libraries, external APIs, and integrations found in the manifests. Note anything that overrides team defaults.
 
-1. Give it a short, lowercase, hyphenated name (this will become `spec/features/{name}/`)
-2. Write a shallow `business.md` — see format below
-3. Identify its dependencies: which other features does it rely on to function?
+**`spec/context/architecture.md`** — how the major pieces connect. Describe the folder structure, key modules, data flow where visible, and any non-obvious architectural decisions found in code or comments.
 
-**Shallow business.md format:**
+**`spec/context/design-system.md`** — extract brand details, typography, colour palette, and component patterns from any existing design tokens, Tailwind config, CSS variables, or style guides found in the repo. Leave blank if none exist.
+
+**`spec/context/environments.md`** — production and staging URLs, AWS account IDs, region settings, and deployment setup from CI/CD configs, `.env.example`, and infrastructure files.
+
+**`spec/context/conventions.md`** — project-specific patterns and any stack overrides found in the existing codebase. Note any documented technical debt.
+
+If a `spec/context/` file already exists and is populated, preserve its content and only add what is missing.
+
+---
+
+## Step 3: Map existing features
+
+Read the codebase and identify the distinct features — areas of functionality that represent a meaningful unit of product value. Aim for the granularity of a developer describing a PR: not "the whole app" and not "this one function", but "user authentication" or "competition creation flow".
+
+For each feature, create `spec/features/{name}/business.md`:
 
 ```markdown
 # {Feature Name} — Business Spec
@@ -74,32 +60,28 @@ For each feature:
 <!-- One paragraph describing the feature's purpose and the user value it delivers. -->
 
 ## Who uses it
-<!-- Which user type or segment. Infer from the code if not documented. -->
+<!-- Which user type or segment. Infer from the code where possible. -->
 
 ## Acceptance criteria (inferred)
 <!-- What the code does, described as testable conditions.
 These are inferred from implementation — not a designed spec.
 - [ ] ...
-- [ ] ...
 -->
 
 ## Dependencies
-<!-- Other features that must exist for this one to work (user-facing dependencies). -->
+<!-- Other features that must exist for this one to work. -->
 
 ## Migration note
-Spec inferred from existing codebase during migration. This is not a designed spec.
-Status: built — this feature is already live in main.
+Spec inferred from existing codebase during migration. Status: built.
 ```
 
-Write each feature's `business.md` to `spec/features/{feature-name}/business.md`.
+If `spec/features/` already exists with some features mapped, skip those and only add what is missing.
 
 ---
 
-## Phase C: Roadmap generation
+## Step 4: Generate the roadmap
 
-After all features are mapped, produce `spec/roadmap.md`.
-
-Every feature identified in Phase B gets `status: built`. The dependency graph should reflect what you found — features that depend on other features should list them in `depends_on`.
+Write `spec/roadmap.md` if it does not already exist. Every feature identified in Step 3 gets `status: built`.
 
 ```yaml
 features:
@@ -116,15 +98,61 @@ features:
 
 ---
 
+## Step 5: Clean up CLAUDE.md
+
+Replace the existing `CLAUDE.md` with the clean framework template below. Any project-specific content from the old CLAUDE.md should already be captured in `spec/context/` above — do not preserve project-specific instructions in CLAUDE.md itself.
+
+```markdown
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+---
+
+## Framework (non-negotiable)
+
+> Mandatory process, agent roles, quality gates, and universal engineering principles. Nothing below overrides this layer.
+
+@.claude/framework/process.md
+@.claude/framework/quality-gates.md
+@.claude/framework/architecture-standards.md
+
+---
+
+## Team defaults
+
+> Opinionated technology choices that apply to all projects for this team. Override specific items in `spec/context/conventions.md` with a documented reason.
+
+@.claude/defaults/stack.md
+@.claude/defaults/patterns.md
+
+---
+
+## Project knowledge
+
+> Everything agents need to know about this project. The Analyst reads this as its source of truth. The Spec Writer keeps it accurate on every branch.
+
+@spec/context/product.md
+@spec/context/tech-stack.md
+@spec/context/architecture.md
+@spec/context/design-system.md
+@spec/context/environments.md
+@spec/context/conventions.md
+@spec/current/overview.md
+@spec/next/overview.md
+```
+
+---
+
 ## Finishing
 
-When all three phases are complete:
+Summarise what was produced:
 
-1. Summarise what was produced:
-   - List the five strategy documents
-   - List all features mapped, with their dependency relationships
-   - Note any areas of the codebase that were ambiguous or not mapped to a feature
+- List each `spec/context/` file and note which sections were populated vs. left blank
+- List all features mapped to `spec/features/`
+- Note any areas of the codebase that were ambiguous or skipped
+- Call out anything that was in the old CLAUDE.md but could not be placed into a context file
 
-2. Flag any gaps — things the code suggested but you could not confidently map to a feature or strategic decision.
+Then tell the founder:
 
-3. Tell the founder: "Review `strategy/` and `spec/features/`. When you're satisfied, commit these files. From this point, use `/plan` to spec new features and `/build` to build them — existing features are marked as built and the dependency graph will advance from here."
+"Migration complete. Review the files listed above and fill in any blank sections you care about before continuing. When ready, run `/strategy` to establish the strategic foundation — it will work from what's already here and only ask about genuine gaps."
