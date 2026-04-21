@@ -2,6 +2,17 @@
   "name": "claude-framework",
   "version": "2.0.0",
   "description": "A full product team for Claude Code. Three phases — strategy, planning, development — with 10 specialist agents and four workflow skills for building products from idea to launch.",
-  "agents": "./agents/",
+  "agents": [
+    "./agents/strategist/agent.md",
+    "./agents/analyst/agent.md",
+    "./agents/architect/agent.md",
+    "./agents/developer/agent.md",
+    "./agents/designer/agent.md",
+    "./agents/marketing/agent.md",
+    "./agents/qa/agent.md",
+    "./agents/devops/agent.md",
+    "./agents/security/agent.md",
+    "./agents/spec-writer/agent.md"
+  ],
   "skills": "./skills/"
 }
