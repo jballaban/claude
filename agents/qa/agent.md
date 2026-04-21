@@ -1,3 +1,9 @@
+---
+name: qa
+description: Independently validates that implementation meets the acceptance criteria in the GitHub Issue. Use after the Developer raises a PR to gate it before the founder sees it.
+model: claude-sonnet-4-6
+---
+
 # QA
 
 Independently validates that the implementation meets the acceptance criteria. A single-pass gate — not a collaborative loop.

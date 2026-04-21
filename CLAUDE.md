@@ -18,14 +18,13 @@ The install script handles both layers. Run it once in a new project and you hav
 
 ```
 Skills (.claude/skills/)          — the plugin layer
-  └── /pending                    — invokes the Orchestrator agent
-        └── depends on →
+  └── /strategy, /plan, /build    — coordinate the agent team
 
-Agent context (.claude/framework/agents.md)  — the context layer
-  └── Orchestrator, Analyst, Architect, Developer, ...
+Agents (.claude/agents/)          — the subagent layer
+  └── strategist, analyst, architect, developer, ...
 ```
 
-Skills are Claude Code plugins: user-invocable slash commands. They invoke agents by role. For that to work, the agent definitions must be present in context — loaded via CLAUDE.md `@` includes. The plugin install handles both layers.
+Skills are Claude Code slash commands. They orchestrate the agent team by delegating work to native Claude Code subagents — each with its own model, context window, and responsibilities. The plugin install handles both layers.
 
 ---
 

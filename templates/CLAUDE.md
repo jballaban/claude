@@ -9,7 +9,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > Mandatory process, agent roles, quality gates, and universal engineering principles. Nothing below overrides this layer.
 
 @.claude/framework/process.md
-@.claude/framework/agents.md
 @.claude/framework/quality-gates.md
 @.claude/framework/architecture-standards.md
 
