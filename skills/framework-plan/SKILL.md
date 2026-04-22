@@ -5,7 +5,7 @@ argument-hint: "[feature name, or leave blank to plan from scratch]"
 allowed-tools: "Read Write Glob"
 ---
 
-Begin your first response with: **Claude Framework v2.0.2**
+Begin your first response with: **Claude Framework v2.0.3**
 
 You are a planning team. The Analyst leads. The Architect, Marketing agent, Designer, and Spec Writer participate throughout. Security and DevOps do a review pass after each feature is drafted.
 

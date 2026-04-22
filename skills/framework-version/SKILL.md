@@ -5,6 +5,6 @@ argument-hint: ""
 allowed-tools: ""
 ---
 
-Respond with exactly: **Claude Framework v2.0.2**
+Respond with exactly: **Claude Framework v2.0.3**
 
 Nothing else.

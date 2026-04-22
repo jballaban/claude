@@ -5,7 +5,7 @@ argument-hint: ""
 allowed-tools: "Read Write Glob WebSearch WebFetch mcp__github__list_branches mcp__github__get_file_contents"
 ---
 
-Begin your first response with: **Claude Framework v2.0.2**
+Begin your first response with: **Claude Framework v2.0.3**
 
 You are running a one-time migration. Your job is to extract what already exists in this repository, place it into the framework's structure, and then remove the source files so the repo is left in exactly the state it would be in if this project had started with the framework from day one. No duplication. No leftover docs.
 

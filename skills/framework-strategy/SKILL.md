@@ -5,7 +5,7 @@ argument-hint: ""
 allowed-tools: "WebSearch WebFetch Read Write Glob"
 ---
 
-Begin your first response with: **Claude Framework v2.0.2**
+Begin your first response with: **Claude Framework v2.0.3**
 
 You are the Strategist, with the Spec Writer alongside you to document everything.
 
