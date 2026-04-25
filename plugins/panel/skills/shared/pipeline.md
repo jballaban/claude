@@ -76,25 +76,40 @@ Constraints: [any relevant constraints from CLAUDE.md or specs]
 
 ## Step 1 · Domain Identification
 
-Using the request and project context from Step 0, identify every domain, discipline, or perspective that could offer meaningful insight. Cast wide — do not limit to technical domains.
+Spawn the `analyze-domains` skill as a **Sonnet subagent**, passing:
+- The original request
+- The project context summary from Step 0
 
-Consider:
-- **Subject matter** — what is this actually about? (software, business, marketing, legal, design, operations, finance, UX, security, data, etc.)
-- **Stakeholder perspectives** — who is affected? (users, developers, operators, executives, customers, regulators, etc.)
-- **Risk dimensions** — what could go wrong? (technical, business, compliance, reputational, operational)
-- **Outcome dimensions** — what does success require? (correctness, adoption, revenue, safety, maintainability, speed, etc.)
+`analyze-domains` returns a three-tiered domain list (up to 10 total):
+- **Critical** — core to the scope; analysis is incomplete without coverage
+- **Important** — highly relevant secondary domains; analysis is weaker without them
+- **Adjacent** — may apply depending on scope; each carries a condition that would make it fully applicable
 
-Rank all identified domains by relevance. Take the top **`DOMAIN_COUNT`**.
+Use the `analyze-domains` output directly as Step 1's domain list. Do not re-rank or re-derive domains.
 
-Also surface any **assumptions** made to proceed (where the request was underspecified) and any **ambiguities** that could materially change the analysis if resolved differently.
+**Mapping `DOMAIN_COUNT`:** The tiered output guides coverage decisions in Step 3. Critical domains always count first. Fill remaining `DOMAIN_COUNT` capacity with Important. Adjacent domains are only included if the Step 3 agent budget (`AGENT_MAX`) allows after Critical and Important are fully covered.
+
+Also carry forward any **assumptions** or **ambiguities** surfaced by `analyze-domains`.
 
 **Output — Step 1:**
-```
-Identified domains (ranked):
-1. [Domain] — [one sentence: why it's relevant to this request]
-2. [Domain] — [one sentence]
-...
 
+Render the `analyze-domains` markdown output directly:
+
+```markdown
+## Domain Analysis
+
+**Critical** _(must be covered)_
+- **[domain]** — [rationale]
+
+**Important** _(should be covered)_
+- **[domain]** — [rationale]
+
+**Adjacent** _(cover if scope confirms)_
+- **[domain]** — [rationale] _(applies if: [condition])_
+```
+
+Then append:
+```
 Assumptions:
 - [Any assumption made to proceed — what was assumed and why]
 
@@ -119,9 +134,9 @@ Also note the **Advisory Level** for each domain:
 
 **Output — Step 2:**
 ```
-| Domain | Catalog Coverage | Status | Advisory Level |
-|--------|-----------------|--------|----------------|
-| [domain] | [catalog concept(s)] | Covered / Partial / Gap | STANDARD / CONSULT |
+| Domain | Tier | Catalog Coverage | Status | Advisory Level |
+|--------|------|-----------------|--------|----------------|
+| [domain] | Critical / Important / Adjacent | [catalog concept(s)] | Covered / Partial / Gap | STANDARD / CONSULT |
 ```
 
 If any CONSULT-level domain is present, inject this advisory note at the top of Step 5 output (naming the specific domains):
@@ -134,7 +149,10 @@ If any CONSULT-level domain is present, inject this advisory note at the top of 
 Build **`AGENT_MIN`–`AGENT_MAX`** domain agents, plus **one adversarial agent** (always included, regardless of tier or agent count).
 
 **Domain agent synthesis rules:**
-- Closely related or overlapping domains → consolidate into one blended agent
+- **Critical domains** — must have dedicated agent coverage; do not blend a Critical domain into an agent that has other primary responsibilities unless agent count forces it
+- **Important domains** — should have agent coverage; may be blended with adjacent Important domains when agent count is constrained
+- **Adjacent domains** — include only if `AGENT_MAX` budget remains after all Critical and Important domains are covered; skip if budget is exhausted
+- Closely related or overlapping domains (within the same tier) → consolidate into one blended agent
 - Domains with catalog gaps → synthesize from adjacent catalog concepts; explicitly name the gap in the agent's task focus
 - Give every agent a task-specific name, not a generic role title ("Stripe Webhook Reliability Specialist" not "Backend Developer")
 - Lower tiers: consolidate aggressively. Higher tiers: be granular — one domain can split into multiple focused agents.
