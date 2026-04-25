@@ -199,7 +199,9 @@ When you disagree with the direction itself (not just implementation details), s
 [DEPTH_INSTRUCTION]
 </depth_instruction>
 
-Return a JSON block inside <agent_analysis> tags. You may include a brief <thinking> block before the JSON.
+**Do NOT write any code, create any files, or take any action. Return only the <agent_analysis> JSON block below.**
+
+You may include a brief <thinking> block before the JSON.
 
 **Priority levels:**
 - `critical` — must be addressed; skipping causes failure, a security issue, or blocks progress entirely
@@ -267,6 +269,8 @@ Do NOT offer constructive improvements — only identify failure modes, vulnerab
 <expert_judgment>
 You are the adversarial voice in this analysis. Challenge every assumption. Be specific and concrete — vague risks are not useful. Your value is in surfacing what others miss or avoid saying.
 </expert_judgment>
+
+**Do NOT write any code, create any files, or take any action. Return only the <agent_analysis> JSON block below.**
 
 Return a JSON block inside <agent_analysis> tags using the adversarial schema below — NOT the standard domain agent schema.
 
