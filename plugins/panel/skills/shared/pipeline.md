@@ -119,64 +119,34 @@ Ambiguities:
 
 ---
 
-## Step 2 · Coverage Check
+## Steps 2–3 · Agent Assembly
 
-Open [agents-catalog.md](agents-catalog.md). For each identified domain, check whether catalog expertise exists that covers it.
+Read [agents-catalog.md](agents-catalog.md), then spawn the `assemble-agents` skill as a **Sonnet subagent**, passing:
+- The tiered domain list from Step 1
+- `AGENT_MIN` and `AGENT_MAX` from tier parameters
+- The original request (for agent naming and focus)
+- The full catalog content just read
 
-For each domain:
-- **Covered** — one or more catalog concepts map directly
-- **Partial** — catalog has adjacent territory but not a direct match
-- **Gap** — no catalog concept covers this domain (will need a fully synthesized agent)
+`assemble-agents` performs both catalog coverage mapping and agent synthesis in one pass, using tier-weighted budget allocation:
+- **Critical domains** (weight 1.0) — must all be represented
+- **Important domains** (weight 0.5) — should be represented; may be blended when constrained
+- **Adjacent domains** (weight 0.25) — included only if agent budget allows after Critical and Important are covered
 
-Also note the **Advisory Level** for each domain:
-- **STANDARD** — model-generated analysis is appropriate; no structural caveat required
-- **CONSULT** — domain (e.g., legal, financial, compliance, ethics) requires qualified professional judgment; model analysis should not substitute for it
+The subagent always appends one adversarial agent slot to the roster. The adversarial agent does not count against the domain budget — it is always additional.
 
-**Output — Step 2:**
-```
-| Domain | Tier | Catalog Coverage | Status | Advisory Level |
-|--------|------|-----------------|--------|----------------|
-| [domain] | Critical / Important / Adjacent | [catalog concept(s)] | Covered / Partial / Gap | STANDARD / CONSULT |
-```
-
-If any CONSULT-level domain is present, inject this advisory note at the top of Step 5 output (naming the specific domains):
+If `assemble-agents` returns any `consult_domains`, carry the advisory note forward to Step 5 output:
 > **Advisory note:** This analysis includes CONSULT-level domain(s): [list]. Model-generated analysis should not substitute for qualified professional judgment in these areas.
 
----
+**Output — Steps 2–3:**
 
-## Step 3 · Dynamic Agent Synthesis
+Render both parts of the `assemble-agents` output under separate labels in the Step 7 Analysis section:
 
-Build **`AGENT_MIN`–`AGENT_MAX`** domain agents, plus **one adversarial agent** (always included, regardless of tier or agent count).
+```markdown
+### Step 2 · Coverage
+[coverage table from assemble-agents output]
 
-**Domain agent synthesis rules:**
-- **Critical domains** — must have dedicated agent coverage; do not blend a Critical domain into an agent that has other primary responsibilities unless agent count forces it
-- **Important domains** — should have agent coverage; may be blended with adjacent Important domains when agent count is constrained
-- **Adjacent domains** — include only if `AGENT_MAX` budget remains after all Critical and Important domains are covered; skip if budget is exhausted
-- Closely related or overlapping domains (within the same tier) → consolidate into one blended agent
-- Domains with catalog gaps → synthesize from adjacent catalog concepts; explicitly name the gap in the agent's task focus
-- Give every agent a task-specific name, not a generic role title ("Stripe Webhook Reliability Specialist" not "Backend Developer")
-- Lower tiers: consolidate aggressively. Higher tiers: be granular — one domain can split into multiple focused agents.
-
-**Adversarial agent (always include one):**
-- Name: `[Topic] Adversarial Reviewer`
-- Mode: blind in Step 4, sighted in Step 6
-- Focus: pre-mortem failure analysis and red-team thinking
-- Schema: distinct from domain agents — uses attack_vectors / steelman_defense / verdict (see Step 4 adversarial prompt)
-
-For each domain agent, define:
-```
-Name: [task-specific title]
-Expertise blend: [catalog concepts drawn from, or "synthesized: [domain]" for gaps]
-Covers: [which Step 1 domains]
-Focus: [what specific aspect of THIS request this agent analyzes]
-```
-
-**Output — Step 3:**
-```
-| Agent | Expertise Blend | Covers | Focus |
-|-------|----------------|--------|-------|
-
-Adversarial agent: [Topic] Adversarial Reviewer (blind in Step 4 → sighted in Step 6)
+### Step 3 · Agent Roster
+[agent roster table + adversarial agent line from assemble-agents output]
 ```
 
 ---
@@ -659,7 +629,7 @@ _This analysis reflects a single model's perspective — validate independently 
 ### Step 2 · Coverage
 [Step 2 output]
 
-### Step 3 · Agents
+### Step 3 · Agent Roster
 [Step 3 output]
 
 ### Step 4 · Agent Analyses
@@ -717,7 +687,7 @@ Result section target: ~400–600 words. Full findings with key decisions and tr
 ### Step 2 · Coverage
 [Step 2 output]
 
-### Step 3 · Agents
+### Step 3 · Agent Roster
 [Step 3 output]
 
 ### Step 4 · Agent Analyses
@@ -785,7 +755,7 @@ For high-stakes decisions, treat this analysis as structured preparation for —
 ### Step 2 · Coverage
 [Step 2 output]
 
-### Step 3 · Agents
+### Step 3 · Agent Roster
 [Step 3 output]
 
 ### Step 4 · Agent Analyses

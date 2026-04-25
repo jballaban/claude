@@ -49,7 +49,7 @@ Follow Steps 0–4 exactly as defined in [../shared/pipeline.md](../shared/pipel
 
 - The **request** passed to agents is: `"Given the following spec, identify the implementation work items your domain requires and their dependencies: [SPEC]"`
 - Use the `DEPTH_INSTRUCTION` from this skill's tier parameters above (not the shared pipeline's depth instruction)
-- Include the always-present adversarial agent from Step 3
+- The adversarial agent is always included — it comes from the `assemble-agents` output in Steps 2–3 and does not count against the domain agent budget
 
 ---
 
