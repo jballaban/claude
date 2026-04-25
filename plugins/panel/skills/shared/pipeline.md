@@ -340,7 +340,10 @@ _(Omit section if none)_
 
 ## Step 6 · Validation Round
 
-Spawn all agents **simultaneously** for a rating pass. Each agent receives the original request, the consolidated plan, and their own Step 4 analysis — so they can check whether their specific concerns were addressed.
+Spawn all agents **simultaneously** for a rating pass. Each agent receives the original request, the consolidated plan, and their own Step 4 analysis. Each agent performs **two checks**:
+
+1. **Intent check** — were their critical and important items addressed faithfully, or were they missing / present but handled in a way that undermines their intent?
+2. **Scope check** — did the consolidated plan introduce material new scope that was not present in the original request? If so, does that new scope invalidate or materially change the agent's original analysis?
 
 Use this prompt for each agent:
 
@@ -359,14 +362,16 @@ Use this prompt for each agent:
 
 You are a [NAME] with expertise in [EXPERTISE_BLEND].
 
-Review the consolidated plan from your domain's perspective only.
+Review the consolidated plan from your domain's perspective only. Perform two checks:
 
-For each of your critical and important items, assess whether it was:
+**Check 1 — Intent:** For each of your critical and important items, assess whether it was:
 - **Addressed with intent preserved** — the plan handles it in a way that achieves the underlying goal
-- **Addressed but intent undermined** — the plan mentions it but handles it in a way that defeats the purpose (e.g. the concern is named but the recommended mitigation is absent or inverted)
+- **Addressed but intent undermined** — the plan mentions it but handles it in a way that defeats the purpose
 - **Missing** — not present in the plan at all
 
-Rate the plan using the definitions below. Your rating reflects the worst outcome across your items.
+**Check 2 — Scope:** Does the consolidated plan introduce material new scope that was not present in the original request? If yes — would that new scope change your analysis in a way that makes your Step 4 output incomplete or incorrect? If so, flag it: the entire pipeline should re-run with the full expanded scope rather than patching the current plan.
+
+Rate the plan using the definitions below. Your rating reflects the worst outcome across both checks.
 
 Return a JSON block inside <validation> tags:
 
@@ -374,9 +379,12 @@ Return a JSON block inside <validation> tags:
 {
   "agent": "[NAME]",
   "rating": "green|yellow|red",
-  "reason": "Required if yellow or red — one sentence naming the specific item and what is deficient about how it was handled."
+  "type": "deficiency | scope_change",
+  "reason": "Required if yellow or red — one sentence. For deficiency: name the specific item and what is deficient. For scope_change: describe the new scope and why it invalidates your prior analysis."
 }
 </validation>
+
+Omit `type` if rating is green.
 ```
 
 **Few-shot examples — what good validation looks like:**
@@ -385,42 +393,50 @@ Return a JSON block inside <validation> tags:
 <example>
 Scenario: Validating a consolidated plan for the JWT authentication system above.
 
-Green — critical and important items adequately handled:
+Green — both checks pass:
 <validation>
-{ "agent": "JWT Implementation Specialist", "rating": "green", "reason": null }
+{ "agent": "JWT Implementation Specialist", "rating": "green" }
 </validation>
 
-Yellow — critical items fine, but an important item's intent was undermined:
+Yellow — intent check: critical items fine, but an important item's intent was undermined:
 <validation>
-{ "agent": "User Experience & Conversion Specialist", "rating": "yellow", "reason": "Error messaging was included but collapsed into a single generic message — the intent (distinct errors per failure state) was not preserved." }
+{ "agent": "User Experience & Conversion Specialist", "rating": "yellow", "type": "deficiency", "reason": "Error messaging was included but collapsed into a single generic message — the intent (distinct errors per failure state) was not preserved." }
 </validation>
 
-Red — a critical item was included but its intent was undermined:
+Red — intent check: a critical item's intent was undermined:
 <validation>
-{ "agent": "JWT Implementation Specialist", "rating": "red", "reason": "Token storage was addressed but the plan recommends sessionStorage as a 'safer alternative to localStorage' — this still exposes tokens to XSS and defeats the httpOnly cookie requirement entirely." }
+{ "agent": "JWT Implementation Specialist", "rating": "red", "type": "deficiency", "reason": "Token storage was addressed but the plan recommends sessionStorage as a 'safer alternative to localStorage' — this still exposes tokens to XSS and defeats the httpOnly cookie requirement entirely." }
+</validation>
+
+Red — scope check: new scope invalidates prior analysis:
+<validation>
+{ "agent": "User Experience & Conversion Specialist", "rating": "red", "type": "scope_change", "reason": "The plan introduced a B2B enterprise SSO requirement that was not in the original request — my entire analysis assumed individual consumer accounts and is incomplete for enterprise identity flows." }
 </validation>
 </example>
 </examples>
 
 **Rating definitions:**
-- 🟢 **Green** — all critical and important items are addressed with intent preserved; nice-to-haves may or may not be ideal
-- 🟡 **Yellow** — critical items are fine, but one or more important items are missing or handled in a way that undermines their intent
-- 🔴 **Red** — one or more critical items are missing or handled in a way that undermines their intent
+- 🟢 **Green** — all critical and important items addressed with intent preserved; no material scope change
+- 🟡 **Yellow** — critical items fine; one or more important items missing or intent undermined; no material scope change
+- 🔴 **Red (deficiency)** — one or more critical items missing or intent undermined
+- 🔴 **Red (scope_change)** — consolidated plan introduced material new scope that invalidates the agent's prior analysis; pipeline must re-run with full expanded scope
 
 **Overall status:**
 - All green → **PASS**
 - Any yellow, no red → **REVIEW**
-- Any red → **RERUN**
+- Any red (deficiency only) → **RERUN**
+- Any red (scope_change) → **RESCOPE**
 
 **Output — Step 6:**
 ```
-| Agent | Rating | Reason |
-|-------|--------|--------|
-| [Name] | 🟢 | — |
-| [Name] | 🟡 | [reason] |
-| [Name] | 🔴 | [reason] |
+| Agent | Rating | Type | Reason |
+|-------|--------|------|--------|
+| [Name] | 🟢 | — | — |
+| [Name] | 🟡 | deficiency | [reason] |
+| [Name] | 🔴 | deficiency | [reason] |
+| [Name] | 🔴 | scope_change | [reason] |
 
-Overall: PASS | REVIEW | RERUN
+Overall: PASS | REVIEW | RERUN | RESCOPE
 ```
 
 ---
@@ -481,7 +497,7 @@ Plan is sound — proceed with these cautions noted:
 **If RERUN:**
 ```markdown
 **Status: 🔴 RERUN**
-The following critical concerns were not addressed in the plan:
+The following critical concerns were not adequately addressed in the plan:
 
 | Agent | Unresolved Issue |
 |-------|-----------------|
@@ -494,6 +510,22 @@ Before re-running, resolve:
 Suggested re-run:
 Tier: [same tier if concerns are targeted — escalate to `/council` if multiple red flags or systemic issues]
 Add to your prompt: "[Draft the additional context or constraint that addresses the flagged concerns]"
+```
+
+**If RESCOPE:**
+```markdown
+**Status: 🔴 RESCOPE**
+The consolidated plan introduced material new scope that was not in the original request. The following agents' prior analyses are incomplete as a result and cannot be patched:
+
+| Agent | New Scope Identified |
+|-------|---------------------|
+| [Name] | [scope_change reason] |
+
+Do not attempt to patch the current plan. Re-run the full pipeline with the expanded scope included in the original prompt:
+
+Suggested re-run:
+Tier: [same tier or escalate if the expanded scope increases complexity]
+Revised prompt: "[Restate the original request with the new scope explicitly included]"
 ```
 
 This pipeline produces analysis only.

@@ -1,7 +1,7 @@
 {
   "name": "panel",
   "description": "Convene a panel of domain experts on any question. Three tiers of depth: /ask for a quick take, /panel for standard analysis, /council for high-stakes deep dives.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "author": {
     "name": "jballaban"
   }
