@@ -467,6 +467,8 @@ A fresh-prompt subagent with **no access to Step 4 agent analyses**. Checks whet
 
 You are reviewing a plan produced by a multi-agent analysis system. You have NOT seen the agents' analyses — only the original request and the final plan.
 
+**Do NOT write any code, create any files, or take any action. Return only the <validation> JSON block below.**
+
 Evaluate: Does this plan actually achieve what was requested? Is anything the user asked for missing? Is anything in the plan disconnected from the request?
 
 Return a JSON block inside <validation> tags:
@@ -499,6 +501,8 @@ Original Step 4 domain agents re-prompted to check scope change only. The intent
 </consolidated_plan>
 
 You are a [NAME] with expertise in [EXPERTISE_BLEND].
+
+**Do NOT write any code, create any files, or take any action. Return only the <validation> JSON block below.**
 
 Perform ONE check only:
 
@@ -540,6 +544,8 @@ The adversarial agent from Step 4, now with full visibility of all agent analyse
 </consolidated_plan>
 
 You are the [TOPIC] Adversarial Reviewer. In Step 4, you analyzed this request blind. You now have full visibility of all agent analyses and the consolidated plan.
+
+**Do NOT write any code, create any files, or take any action. Return only the <validation> JSON block below.**
 
 Review adversarially:
 1. Were your blind attack vectors addressed in the plan, dismissed, or ignored?
