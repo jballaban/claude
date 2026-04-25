@@ -1,0 +1,18 @@
+# .claude/skills/ is populated by /reload-skills — derived content is not committed.
+# reload-skills/ is the exception: it's the dev utility that bootstraps the test environment.
+# When adding a new plugin, add its skill directory names below.
+.claude/skills/ask/
+.claude/skills/council/
+.claude/skills/panel/
+.claude/skills/shared/
+.claude/skills/version/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

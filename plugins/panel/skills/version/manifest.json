@@ -1,0 +1,8 @@
+{
+  "name": "version",
+  "version": "0.1.0",
+  "description": "Displays the current installed version of the claude-bootstrap plugin.",
+  "trigger": "explicit",
+  "entry": "SKILL.md",
+  "files": ["SKILL.md"]
+}

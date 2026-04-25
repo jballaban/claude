@@ -1,0 +1,515 @@
+# Orchestration Pipeline
+
+Shared algorithm for `/ask`, `/panel`, and `/council`. Each skill defines its tier parameters; this pipeline executes identically across all three.
+
+## Contents
+- [Tier Parameters](#tier-parameters)
+- [Orchestrator Instructions](#orchestrator-instructions)
+- [Pre-flight: Complexity & Ambiguity Check](#pre-flight--complexity--ambiguity-check)
+- [Step 0: Context Gathering](#step-0--context-gathering)
+- [Step 1: Domain Identification](#step-1--domain-identification)
+- [Step 2: Coverage Check](#step-2--coverage-check)
+- [Step 3: Dynamic Agent Synthesis](#step-3--dynamic-agent-synthesis)
+- [Step 4: Parallel Agent Analysis](#step-4--parallel-agent-analysis)
+- [Step 5: Consolidation](#step-5--consolidation)
+- [Step 6: Validation Round](#step-6--validation-round)
+- [Step 7: Final Output](#step-7--final-output)
+
+---
+
+## Tier Parameters
+
+Injected by the calling skill:
+- `DOMAIN_COUNT` — how many top domains to identify
+- `AGENT_MIN` / `AGENT_MAX` — agent count range
+- `TIER_NAME` — ask | panel | council
+- `DEPTH_INSTRUCTION` — per-tier instruction injected into every agent prompt
+
+**Phases are optional and contextual.** Only include phase assignments if the request naturally maps to a phased progression. For strategy questions, audits, or analysis tasks, phases often don't apply — omit them entirely.
+
+When phases do apply, use names that fit the work. Suggested vocabulary (not required):
+- `discovery` — requirements, research, decisions needed before starting
+- `design` — architecture, spec, interface or structural design
+- `implementation` — building
+- `validation` — testing, review, verification
+- `release` — deployment, rollout, migration
+- `post-launch` — monitoring, cleanup, follow-up
+
+Agents may define their own phase names when the suggested vocabulary doesn't fit the domain (e.g., `research`, `outreach`, `measurement`).
+
+---
+
+## Orchestrator Instructions
+
+<use_parallel_tool_calls>
+When spawning agents in Steps 4 and 6, launch ALL agents simultaneously in a single response. Never wait for one agent to complete before spawning the next. Independent agent calls must always run in parallel.
+</use_parallel_tool_calls>
+
+---
+
+## Pre-flight · Complexity & Ambiguity Check
+
+Before running the pipeline, apply two gates in order:
+
+**Gate 1 — Complexity check:** Would a single direct response serve this request better than multi-agent analysis? If the request is a simple factual question, a quick definition, a one-line fix, or anything that doesn't benefit from multiple domain perspectives — answer it directly. Skip the pipeline entirely.
+
+**Gate 2 — Ambiguity check:** Can you identify at least 2 meaningful domains from this request as written?
+- **Yes** → proceed to Step 0
+- **No** → ask the user 2–3 targeted clarifying questions. Do not proceed until answered. Triggers: "make it better", "fix the thing", "help with my project", no subject matter identifiable.
+
+If the request is directionally clear but missing some details, proceed and state your assumptions explicitly at the top of Step 1 output.
+
+---
+
+## Step 0 · Context Gathering
+
+Gather available project context before identifying domains. This prevents agents from analyzing in a vacuum.
+
+1. **Check for CLAUDE.md** — if it exists, read it. Extract: tech stack, conventions, constraints, relevant project context.
+2. **Check for spec or docs** — look for `spec/`, `docs/`, `README.md`. Read any directly relevant to the request.
+3. **Check for stack signals** — look for `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `*.csproj`, or equivalent. Extract the stack if identifiable.
+4. **If no project files exist** — note "no project context available" and proceed.
+
+Produce a brief context summary (3–6 sentences max) appended to every agent prompt.
+
+**Output — Step 0:**
+```
+## Project Context
+[Summary of what was found, or "No project context available."]
+Stack: [identified stack or "unknown"]
+Constraints: [any relevant constraints from CLAUDE.md or specs]
+```
+
+---
+
+## Step 1 · Domain Identification
+
+Using the request and project context from Step 0, identify every domain, discipline, or perspective that could offer meaningful insight. Cast wide — do not limit to technical domains.
+
+Consider:
+- **Subject matter** — what is this actually about? (software, business, marketing, legal, design, operations, finance, UX, security, data, etc.)
+- **Stakeholder perspectives** — who is affected? (users, developers, operators, executives, customers, regulators, etc.)
+- **Risk dimensions** — what could go wrong? (technical, business, compliance, reputational, operational)
+- **Outcome dimensions** — what does success require? (correctness, adoption, revenue, safety, maintainability, speed, etc.)
+
+Rank all identified domains by relevance. Take the top **`DOMAIN_COUNT`**.
+
+Also surface any **assumptions** made to proceed (where the request was underspecified) and any **ambiguities** that could materially change the analysis if resolved differently.
+
+**Output — Step 1:**
+```
+Identified domains (ranked):
+1. [Domain] — [one sentence: why it's relevant to this request]
+2. [Domain] — [one sentence]
+...
+
+Assumptions:
+- [Any assumption made to proceed — what was assumed and why]
+
+Ambiguities:
+- [Any open question where different answers would lead to materially different analysis]
+```
+
+---
+
+## Step 2 · Coverage Check
+
+Open [agents-catalog.md](agents-catalog.md). For each identified domain, check whether catalog expertise exists that covers it.
+
+For each domain:
+- **Covered** — one or more catalog concepts map directly
+- **Partial** — catalog has adjacent territory but not a direct match
+- **Gap** — no catalog concept covers this domain (will need a fully synthesized agent)
+
+Ignore catalog concepts irrelevant to the request type (e.g. language specialists for a pure business strategy question).
+
+**Output — Step 2:**
+```
+| Domain | Catalog Coverage | Status |
+|--------|-----------------|--------|
+| [domain] | [catalog concept(s)] | Covered / Partial / Gap |
+```
+
+---
+
+## Step 3 · Dynamic Agent Synthesis
+
+Build **`AGENT_MIN`–`AGENT_MAX`** agents ensuring every identified domain has representation.
+
+**Synthesis rules:**
+- Closely related or overlapping domains → consolidate into one blended agent
+- Domains with catalog gaps → synthesize from adjacent catalog concepts; explicitly name the gap in the agent's task focus
+- Give every agent a task-specific name, not a generic role title ("Stripe Webhook Reliability Specialist" not "Backend Developer")
+- Lower tiers: consolidate aggressively. Higher tiers: be granular — one domain can split into multiple focused agents.
+
+For each synthesized agent, define:
+```
+Name: [task-specific title]
+Expertise blend: [catalog concepts drawn from, or "synthesized: [domain]" for gaps]
+Covers: [which Step 1 domains]
+Focus: [what specific aspect of THIS request this agent analyzes]
+```
+
+**Output — Step 3:**
+```
+| Agent | Expertise Blend | Covers | Focus |
+|-------|----------------|--------|-------|
+```
+
+---
+
+## Step 4 · Parallel Agent Analysis
+
+Spawn all synthesized agents **simultaneously** (see orchestrator instructions above). Wait for all responses before proceeding.
+
+If an agent returns malformed output or fails: note the failure in Step 4 output, mark that agent's domain as "unanalyzed", flag the coverage gap in Step 5, and continue with remaining agents. A single agent failure must not block the pipeline.
+
+Use this prompt for each agent (substitute all bracketed values from Step 0 and Step 3):
+
+```
+<project_context>
+[STEP_0_CONTEXT_SUMMARY]
+</project_context>
+
+<request>
+[ORIGINAL_REQUEST]
+</request>
+
+You are a [NAME] with expertise in [EXPERTISE_BLEND].
+
+<focus>
+Analyze the request from the perspective of [FOCUS] only.
+Focus strictly on what your domain sees, requires, and would own.
+</focus>
+
+<depth_instruction>
+[DEPTH_INSTRUCTION]
+</depth_instruction>
+
+You may include a brief <thinking> block to show your reasoning before the JSON — this is optional but helpful.
+
+Return a JSON block inside <agent_analysis> tags:
+
+<agent_analysis>
+{
+  "agent": "[NAME]",
+  "domain": "[one-line description of your focus]",
+  "assumptions": [
+    "What you assumed about the request to proceed — omit field if none"
+  ],
+  "blockers": [
+    "Issues that must be resolved before proceeding — omit field if none"
+  ],
+  "risks": [
+    "Near-term concerns that will cause failure or significant problems if ignored"
+  ],
+  "long_term_implications": [
+    "Structural or compounding concerns that become expensive or problematic over time — omit field if none"
+  ],
+  "recommendations": [
+    "Specific, actionable recommendations from your domain"
+  ],
+  "open_questions": [
+    "Decisions or unknowns that must be resolved — omit field if none"
+  ],
+  "phase_assignments": [
+    {
+      "phase": "[name appropriate to the work — omit this entire field if phases don't apply]",
+      "actions": ["Specific actions your domain owns in this phase"]
+    }
+  ]
+}
+</agent_analysis>
+
+Include only fields where your domain has something meaningful to contribute. Omit `phase_assignments` entirely if the work doesn't naturally decompose into phases.
+```
+
+**Few-shot examples — what good agent analysis looks like:**
+
+<examples>
+<example>
+Request: Build a JWT authentication system for a Next.js application.
+
+Agent: JWT Implementation Specialist (expertise: nextjs-specialist, backend-developer, security-auditor)
+
+<thinking>
+The main risk here is token storage — localStorage is the common mistake. I should flag it as a risk since there's technically a tradeoff, but httpOnly cookies are clearly the right default. The refresh flow is equally important and almost always forgotten in early implementations.
+</thinking>
+<agent_analysis>
+{
+  "agent": "JWT Implementation Specialist",
+  "domain": "Token-based authentication implementation in Next.js",
+  "risks": [
+    "Storing JWT in localStorage exposes tokens to XSS attacks — httpOnly cookies are the correct approach",
+    "Without a token refresh mechanism, users will be silently logged out when tokens expire"
+  ],
+  "recommendations": [
+    "Store JWT in httpOnly, Secure, SameSite=Strict cookies — never in localStorage or sessionStorage",
+    "Implement a /api/auth/refresh endpoint with silent refresh logic triggered before expiry",
+    "Use next-auth rather than rolling custom token logic — it handles edge cases that are easy to miss"
+  ],
+  "open_questions": [
+    "What is the desired session duration — short-lived tokens with refresh, or long-lived single tokens?"
+  ],
+  "phase_assignments": [
+    { "phase": "design", "actions": ["Define token lifecycle: issue, refresh, revoke", "Decide: next-auth vs custom implementation"] },
+    { "phase": "implementation", "actions": ["Implement login endpoint with bcrypt comparison", "Implement httpOnly cookie token storage and middleware"] },
+    { "phase": "validation", "actions": ["Test token expiry and silent refresh flow", "Verify tokens are not accessible via document.cookie"] }
+  ]
+}
+</agent_analysis>
+</example>
+
+<example>
+Request: Build a JWT authentication system for a Next.js application.
+
+Agent: User Experience & Conversion Specialist (expertise: ux-researcher, product-manager)
+
+<thinking>
+The technical team will handle the token mechanics. My domain is the user-facing flow — login friction, error clarity, and session UX. These are often treated as afterthoughts but directly affect retention.
+</thinking>
+<agent_analysis>
+{
+  "agent": "User Experience & Conversion Specialist",
+  "domain": "User-facing authentication flow, friction, and conversion impact",
+  "risks": [
+    "Aggressive session timeouts increase re-login friction and measurably hurt retention",
+    "Generic error messages like 'invalid credentials' frustrate users and increase support load"
+  ],
+  "recommendations": [
+    "Offer a 'remember me' option that extends session duration for returning users on trusted devices",
+    "Show distinct error messages for wrong password vs. account not found vs. account locked",
+    "Surface the forgotten password link prominently before users hit frustration — not hidden below the form"
+  ],
+  "open_questions": [
+    "Should enterprise accounts have stricter session policies than individual users?",
+    "Is social login (Google / GitHub) in scope for this release or deferred?"
+  ],
+  "phase_assignments": [
+    { "phase": "design", "actions": ["Define session duration defaults per user segment", "Write error message copy for every failure state"] },
+    { "phase": "validation", "actions": ["Run the login flow with 3–5 real users before launch", "Check error message clarity with someone unfamiliar with the system"] }
+  ]
+}
+</agent_analysis>
+</example>
+</examples>
+
+**Rendering — Step 4:**
+Parse each agent's JSON and render as readable markdown under a named subheading:
+
+```markdown
+### [Agent Name]
+**Domain:** [domain]
+
+**Assumptions:** [bulleted list — omit section if none]
+**Blockers:** [bulleted list — omit section if none]
+**Risks:** [bulleted list]
+**Long-term implications:** [bulleted list — omit if none]
+**Recommendations:** [bulleted list]
+**Open questions:** [bulleted list — omit if none]
+
+**Phase assignments:** _(omit section if phases don't apply)_
+- *[phase]*: [actions]
+```
+
+---
+
+## Step 5 · Consolidation
+
+Merge all Step 4 outputs into a single coherent plan.
+
+1. **Deduplicate** — merge identical or near-identical concerns, noting all source agents
+2. **Escalate blockers** — anything any agent called a blocker is a blocker in the plan
+3. **Preserve disagreements** — where agents contradict, surface both as a tradeoff; do not silently resolve
+4. **Action grouping** — group actions by phases only if phases apply; use phase names appropriate to the work. If phases don't apply, list actions as a flat prioritized list. Within each phase order: blockers first → risk mitigation → core work → validation → cleanup
+5. **Coverage check** — verify every Step 1 domain appears somewhere in the plan; flag any that don't (including domains from agents that failed in Step 4)
+
+**Output — Step 5:**
+```markdown
+### Assumptions & Ambiguity
+- [Assumption made to proceed, or ambiguity that could change the analysis] _(agent)_
+
+_(Omit section if no assumptions were made and the request was fully specified)_
+
+### Blockers
+- [ ] [Blocker] _(sources: agent-a, agent-b)_
+
+### Risks
+- [Risk] _(agent)_
+
+### Long-term Implications
+- [Implication] _(agent)_
+
+### Open Questions
+- [Question] _(agent)_
+
+### Action Plan
+
+_(Group actions by phases only if phases apply. Use phase names appropriate to the work — do not force development phases onto non-development tasks. If phases don't apply, list actions as a flat prioritized list instead.)_
+
+#### [Phase name] _(if applicable)_
+- [ ] [Action] _(agent)_
+
+### Tradeoffs
+| Topic | Option A | Option B | Recommendation |
+|-------|----------|----------|----------------|
+
+### Coverage gaps _(if any Step 1 domains are unrepresented)_
+- [Domain]: not addressed in plan
+```
+
+---
+
+## Step 6 · Validation Round
+
+Spawn all agents **simultaneously** for a rating pass. Each agent receives the original request, the consolidated plan, and their own Step 4 analysis — so they can check whether their specific concerns were addressed.
+
+Use this prompt for each agent:
+
+```
+<request>
+[ORIGINAL_REQUEST]
+</request>
+
+<your_previous_analysis>
+[THIS_AGENT'S_FULL_STEP_4_JSON_OUTPUT]
+</your_previous_analysis>
+
+<consolidated_plan>
+[STEP_5_OUTPUT]
+</consolidated_plan>
+
+You are a [NAME] with expertise in [EXPERTISE_BLEND].
+
+Review the consolidated plan from your domain's perspective only.
+Check whether your blockers were addressed, your risks acknowledged, and your recommendations reflected.
+
+Return a JSON block inside <validation> tags:
+
+<validation>
+{
+  "agent": "[NAME]",
+  "rating": "green|yellow|red",
+  "reason": "Required if yellow or red — one sentence. Yellow: concerns present but plan is broadly usable. Red: a blocker or critical gap was not addressed and proceeding risks real harm."
+}
+</validation>
+```
+
+**Few-shot examples — what good validation looks like:**
+
+<examples>
+<example>
+Scenario: Validating a consolidated plan for the JWT authentication system above.
+
+Green — all concerns addressed:
+<validation>
+{ "agent": "JWT Implementation Specialist", "rating": "green", "reason": null }
+</validation>
+
+Yellow — minor gap remains:
+<validation>
+{ "agent": "User Experience & Conversion Specialist", "rating": "yellow", "reason": "Silent token refresh wasn't included in the plan — users will see unexpected session timeouts at launch." }
+</validation>
+
+Red — blocker was not addressed:
+<validation>
+{ "agent": "Security Specialist", "rating": "red", "reason": "My blocker about httpOnly cookies was not addressed — the plan still references localStorage for token storage, which is a launch-blocking security flaw." }
+</validation>
+</example>
+</examples>
+
+**Rating definitions:**
+- 🟢 **Green** — domain concerns are adequately addressed; proceed with confidence
+- 🟡 **Yellow** — minor gaps or unresolved questions remain; proceed with caution
+- 🔴 **Red** — a blocker or critical concern from this agent's Step 4 was not addressed in the plan
+
+**Overall status:**
+- All green → **PASS**
+- Any yellow, no red → **REVIEW**
+- Any red → **RERUN**
+
+**Output — Step 6:**
+```
+| Agent | Rating | Reason |
+|-------|--------|--------|
+| [Name] | 🟢 | — |
+| [Name] | 🟡 | [reason] |
+| [Name] | 🔴 | [reason] |
+
+Overall: PASS | REVIEW | RERUN
+```
+
+---
+
+## Step 7 · Final Output
+
+Present the complete run to the user. Include every step.
+
+```markdown
+# /[TIER_NAME]: [one-line task summary]
+
+## Step 0 · Context
+[Step 0 output]
+
+## Step 1 · Domains
+[Step 1 output]
+
+## Step 2 · Coverage
+[Step 2 output]
+
+## Step 3 · Agents
+[Step 3 output]
+
+## Step 4 · Agent Analyses
+[Step 4 rendered output — each agent under its own subheading]
+
+## Step 5 · Consolidated Plan
+[Step 5 output]
+
+## Step 6 · Validation
+[Step 6 table + overall status]
+
+---
+
+## Result
+```
+
+**If PASS:**
+```markdown
+**Status: ✅ PASS**
+All agents satisfied with the plan. Proceed with confidence.
+
+[Restate the Step 5 consolidated plan cleanly, without agent attribution noise]
+```
+
+**If REVIEW:**
+```markdown
+**Status: ⚠️ REVIEW**
+Plan is sound — proceed with these cautions noted:
+
+| Agent | Concern |
+|-------|---------|
+| [Name] | [yellow reason] |
+
+[Restate the Step 5 consolidated plan]
+```
+
+**If RERUN:**
+```markdown
+**Status: 🔴 RERUN**
+The following critical concerns were not addressed in the plan:
+
+| Agent | Unresolved Issue |
+|-------|-----------------|
+| [Name] | [red reason] |
+
+Before re-running, resolve:
+- [ ] [Specific action addressing red concern 1]
+- [ ] [Specific action addressing red concern 2]
+
+Suggested re-run:
+Tier: [same tier if concerns are targeted — escalate to `/council` if multiple red flags or systemic issues]
+Add to your prompt: "[Draft the additional context or constraint that addresses the flagged concerns]"
+```
+
+This pipeline produces analysis only.

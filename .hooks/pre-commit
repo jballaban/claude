@@ -1,0 +1,37 @@
+#!/bin/bash
+# Bumps the patch version in each plugin's plugin.json and version SKILL.md
+# only when that plugin has staged changes.
+set -e
+
+for plugin_dir in plugins/*/; do
+  [ -d "$plugin_dir" ] || continue
+  plugin_json="${plugin_dir}.claude-plugin/plugin.json"
+  [ -f "$plugin_json" ] || continue
+
+  plugin_name=$(basename "$plugin_dir")
+
+  # Skip plugins with no staged changes
+  git diff --cached --name-only | grep -q "^${plugin_dir}" || continue
+
+  version_skill="${plugin_dir}skills/version/SKILL.md"
+
+  current=$(grep -o '"version": "[^"]*"' "$plugin_json" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+')
+  [ -z "$current" ] && continue
+
+  major="${current%%.*}"
+  rest="${current#*.}"
+  minor="${rest%%.*}"
+  patch="${rest#*.}"
+  new_version="$major.$minor.$((patch + 1))"
+  escaped=$(echo "$current" | sed 's/\./\\./g')
+
+  sed -i "s/\"version\": \"$current\"/\"version\": \"$new_version\"/" "$plugin_json"
+  git add "$plugin_json"
+
+  if [ -f "$version_skill" ]; then
+    sed -i "s/$escaped/$new_version/g" "$version_skill"
+    git add "$version_skill"
+  fi
+
+  echo "  $plugin_name: $current → $new_version"
+done

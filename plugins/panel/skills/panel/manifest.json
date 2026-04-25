@@ -1,0 +1,19 @@
+{
+  "name": "panel",
+  "version": "1.0.0",
+  "description": "Standard-tier analysis. Identifies top 5 domains, synthesizes 3–7 dynamic agents on demand, runs parallel analysis, consolidates, and validates with traffic-light ratings. Returns all steps and a status.",
+  "tier": "standard",
+  "trigger": "explicit",
+  "entry": "SKILL.md",
+  "files": ["SKILL.md", "../shared/pipeline.md", "../shared/agents-catalog.md"],
+  "agent_source": "https://github.com/VoltAgent/awesome-claude-code-subagents",
+  "tags": ["planning", "analysis", "multi-agent", "panel"],
+  "models": {
+    "orchestrator": "claude-sonnet-4-6",
+    "subagents": "claude-haiku-4-5-20251001"
+  },
+  "effort": {
+    "orchestrator": "high",
+    "subagents": "medium"
+  }
+}
