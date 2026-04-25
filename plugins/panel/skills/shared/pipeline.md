@@ -360,7 +360,13 @@ Use this prompt for each agent:
 You are a [NAME] with expertise in [EXPERTISE_BLEND].
 
 Review the consolidated plan from your domain's perspective only.
-Check whether your critical items were addressed, your important concerns acknowledged, and your recommendations reflected.
+
+For each of your critical and important items, assess whether it was:
+- **Addressed with intent preserved** — the plan handles it in a way that achieves the underlying goal
+- **Addressed but intent undermined** — the plan mentions it but handles it in a way that defeats the purpose (e.g. the concern is named but the recommended mitigation is absent or inverted)
+- **Missing** — not present in the plan at all
+
+Rate the plan using the definitions below. Your rating reflects the worst outcome across your items.
 
 Return a JSON block inside <validation> tags:
 
@@ -368,7 +374,7 @@ Return a JSON block inside <validation> tags:
 {
   "agent": "[NAME]",
   "rating": "green|yellow|red",
-  "reason": "Required if yellow or red — one sentence. Yellow: concerns present but plan is broadly usable. Red: a blocker or critical gap was not addressed and proceeding risks real harm."
+  "reason": "Required if yellow or red — one sentence naming the specific item and what is deficient about how it was handled."
 }
 </validation>
 ```
@@ -379,27 +385,27 @@ Return a JSON block inside <validation> tags:
 <example>
 Scenario: Validating a consolidated plan for the JWT authentication system above.
 
-Green — all concerns addressed:
+Green — critical and important items adequately handled:
 <validation>
 { "agent": "JWT Implementation Specialist", "rating": "green", "reason": null }
 </validation>
 
-Yellow — minor gap remains:
+Yellow — critical items fine, but an important item's intent was undermined:
 <validation>
-{ "agent": "User Experience & Conversion Specialist", "rating": "yellow", "reason": "Silent token refresh wasn't included in the plan — users will see unexpected session timeouts at launch." }
+{ "agent": "User Experience & Conversion Specialist", "rating": "yellow", "reason": "Error messaging was included but collapsed into a single generic message — the intent (distinct errors per failure state) was not preserved." }
 </validation>
 
-Red — blocker was not addressed:
+Red — a critical item was included but its intent was undermined:
 <validation>
-{ "agent": "Security Specialist", "rating": "red", "reason": "My blocker about httpOnly cookies was not addressed — the plan still references localStorage for token storage, which is a launch-blocking security flaw." }
+{ "agent": "JWT Implementation Specialist", "rating": "red", "reason": "Token storage was addressed but the plan recommends sessionStorage as a 'safer alternative to localStorage' — this still exposes tokens to XSS and defeats the httpOnly cookie requirement entirely." }
 </validation>
 </example>
 </examples>
 
 **Rating definitions:**
-- 🟢 **Green** — domain concerns are adequately addressed; proceed with confidence
-- 🟡 **Yellow** — minor gaps or unresolved questions remain; proceed with caution
-- 🔴 **Red** — a critical item from this agent's Step 4 was not addressed in the plan
+- 🟢 **Green** — all critical and important items are addressed with intent preserved; nice-to-haves may or may not be ideal
+- 🟡 **Yellow** — critical items are fine, but one or more important items are missing or handled in a way that undermines their intent
+- 🔴 **Red** — one or more critical items are missing or handled in a way that undermines their intent
 
 **Overall status:**
 - All green → **PASS**
