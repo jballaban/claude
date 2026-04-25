@@ -412,16 +412,16 @@ For the adversarial agent:
 
 ## Step 5 · Consolidation
 
-Merge all domain agent outputs into a **sequenced action plan** — an ordered list of concrete actions with dependencies, not a triage list grouped by severity.
+Merge all domain agent outputs into a **consolidated answer** to the original question. The output shape follows the nature of the question — not a fixed format imposed regardless of what was asked.
 
 **Consolidation rules:**
-1. **Identify actionable items**: From all agents' critical and important outputs, extract discrete actions (recommendations that specify a concrete step, and risks that require a specific mitigation). These become action plan steps.
-2. **Identify informational items**: Risks and preserves that inform execution but don't map to a single discrete action — these become "Risks to Monitor."
-3. **Sequence by dependency**: Order actions by: (a) prerequisites — what must exist before this can proceed; (b) reversibility — irreversible actions later where possible; (c) priority — critical-sourced items before important-sourced items when ordering is otherwise ambiguous.
-4. **Deduplicate across agents**: Merge identical or near-identical concerns; note all source agents.
-5. **Preserve disagreements as tradeoffs**: Where agents disagree on approach or priority, surface both sides as a tradeoff — do not silently resolve.
+1. **Answer the question directly**: Lead with what the panel concludes, recommends, or decides. This is the primary output.
+2. **Deduplicate across agents**: Merge identical or near-identical concerns; note all source agents.
+3. **Preserve disagreements as tradeoffs**: Where agents assign different priorities or recommend different approaches, surface both as a tradeoff — do not silently resolve.
+4. **Separate risks from decisions**: Risks that require awareness belong in their own section, not buried in the main answer.
+5. **Flag unresolved questions**: Decisions or unknowns that could materially change the answer belong in Open Questions.
 6. **Verify coverage**: Confirm every Step 1 domain is represented; flag any gaps.
-7. **Integrate adversarial findings**: Include the adversarial agent's attack vectors in "Risks to Monitor" or as specific action items if active mitigation is required.
+7. **Integrate adversarial findings**: Fold the adversarial agent's attack vectors into the Risks section or the main answer where they affect the recommendation.
 
 **Output — Step 5:**
 
@@ -429,25 +429,27 @@ _If any CONSULT-level domain was identified in Step 2, inject this advisory note
 > **Advisory note:** This analysis includes CONSULT-level domain(s): [list]. Model-generated analysis should not substitute for qualified professional judgment in these areas.
 
 ```markdown
-### Action Plan
+### Findings
 
-| Step | Action | Prerequisites | Domain(s) | Reversible |
-|------|--------|---------------|-----------|------------|
-| 1 | [concrete action] | none | [domain] | yes |
-| 2 | [concrete action] | step 1 | [domain] | yes |
+[Direct answer to the question asked — what the panel recommends, concludes, or advises. Shape this to fit the question: a recommendation for decision questions, a spec outline for design questions, a risk summary for evaluation questions, etc.]
 
-### Risks to Monitor
-- `risk` [concern] _(source: agent-a, agent-b)_
+### Key Decisions _(omit if none)_
+| Decision | Recommendation | Rationale |
+|----------|---------------|-----------|
+| [decision point] | [chosen approach] | [why, based on agent consensus] |
 
 ### Tradeoffs _(omit if none)_
 | Topic | Option A | Option B | Recommendation |
 |-------|----------|----------|----------------|
 
+### Risks _(omit if none)_
+- `risk` [concern] _(source: agent)_
+
 ### Open Questions _(omit if none)_
-- [Decision or unknown requiring resolution before or during execution] _(source: agent)_
+- [Decision or unknown that could materially change the answer] _(source: agent)_
 
 ### Coverage Gaps _(omit if none)_
-- [Domain]: not addressed in plan
+- [Domain]: not addressed
 ```
 
 ---
@@ -612,19 +614,17 @@ Present the run **result-first**: the Result section appears at the top before t
 
 ### /ask output template
 
-Result section target: ~200 words. Action list only — no agent attribution, no tradeoffs table.
+Result section target: ~200 words. Direct answer only — no agent attribution, no tradeoffs table.
 
 ```markdown
-# /ask: [one-line task summary]
+# /ask: [one-line summary of the question]
 
 ## Result
 **Status: [STATUS emoji + word]**
 
 [If REVIEW — one-line caution per concern, inline]
 
-1. [Action]
-2. [Action]
-3. [Action]
+[Direct answer to the question — concise, 3–5 bullets or a short paragraph. Shape to fit: recommendations, key conclusions, or a brief outline.]
 
 _This analysis reflects a single model's perspective — validate independently before acting._
 
@@ -647,7 +647,7 @@ _This analysis reflects a single model's perspective — validate independently 
 ### Step 4 · Agent Analyses
 [Step 4 rendered output — each agent under its own subheading]
 
-### Step 5 · Consolidated Plan
+### Step 5 · Consolidated Findings
 [Step 5 output]
 
 ### Step 6 · Validation
@@ -658,10 +658,10 @@ _This analysis reflects a single model's perspective — validate independently 
 
 ### /panel output template
 
-Result section target: ~400–600 words. Sequenced plan with tradeoffs. One-paragraph epistemic caveat.
+Result section target: ~400–600 words. Full findings with key decisions and tradeoffs. One-paragraph epistemic caveat.
 
 ```markdown
-# /panel: [one-line task summary]
+# /panel: [one-line summary of the question]
 
 ## Result
 **Status: [STATUS emoji + word]**
@@ -672,11 +672,17 @@ Result section target: ~400–600 words. Sequenced plan with tradeoffs. One-para
 |-----------------|---------|
 | [Name] | [yellow reason] |
 
-### Action Plan
-[Sequenced action plan — table or numbered list with prerequisites]
+### Findings
+[Direct answer to the question — shaped to fit. Recommendation for decision questions, design outline for spec questions, risk summary for evaluation questions.]
+
+### Key Decisions _(omit if none)_
+[Key decisions table]
 
 ### Tradeoffs _(omit if none)_
 [Tradeoffs table]
+
+### Risks _(omit if none)_
+[Risk list]
 
 > **Note on independence:** All agents in this analysis share the same underlying model weights. They can surface different concerns but cannot provide genuinely independent validation. For decisions with significant consequences, seek qualified domain expert review.
 
@@ -699,7 +705,7 @@ Result section target: ~400–600 words. Sequenced plan with tradeoffs. One-para
 ### Step 4 · Agent Analyses
 [Step 4 rendered output — each agent under its own subheading]
 
-### Step 5 · Consolidated Plan
+### Step 5 · Consolidated Findings
 [Step 5 output]
 
 ### Step 6 · Validation
@@ -710,10 +716,10 @@ Result section target: ~400–600 words. Sequenced plan with tradeoffs. One-para
 
 ### /council output template
 
-Result section: full document. Dedicated Confidence & Limitations section. Architecture decision rationale. All steps shown in full.
+Result section: full document. Dedicated Confidence & Limitations section. All steps shown in full.
 
 ```markdown
-# /council: [one-line task summary]
+# /council: [one-line summary of the question]
 
 ## Result
 **Status: [STATUS emoji + word]**
@@ -724,11 +730,17 @@ Result section: full document. Dedicated Confidence & Limitations section. Archi
 |-----------------|---------|
 | [Name] | [yellow reason] |
 
-### Action Plan
-[Full sequenced action plan table]
+### Findings
+[Full answer to the question — shaped to fit. Comprehensive recommendation, design spec, or analysis as appropriate.]
+
+### Key Decisions _(omit if none)_
+[Key decisions table]
 
 ### Tradeoffs
 [Full tradeoffs table]
+
+### Risks
+[Full risk list]
 
 ### Open Questions
 [Open questions list]
@@ -761,7 +773,7 @@ For high-stakes decisions, treat this analysis as structured preparation for —
 ### Step 4 · Agent Analyses
 [Step 4 rendered output — each agent under its own subheading]
 
-### Step 5 · Consolidated Plan
+### Step 5 · Consolidated Findings
 [Step 5 output]
 
 ### Step 6 · Validation
@@ -774,9 +786,9 @@ For high-stakes decisions, treat this analysis as structured preparation for —
 
 These slots apply within the tier templates above.
 
-**If PASS:** Render the action plan and epistemic caveat only. No additional notes needed.
+**If PASS:** Render the findings and epistemic caveat only. No additional notes needed.
 
-**If REVIEW:** Add the caution table before the action plan (as shown in the templates). Plan is sound; proceed with awareness of flagged items.
+**If REVIEW:** Add the caution table before the findings (as shown in the templates). Answer is sound; proceed with awareness of flagged items.
 
 **If RERUN:** Replace the action plan with:
 
@@ -784,7 +796,7 @@ These slots apply within the tier templates above.
 ## Result
 **Status: 🔴 RERUN**
 
-The following critical concerns were not adequately addressed. Resolve before executing:
+The following critical concerns prevent a reliable answer from being produced. Resolve before re-running:
 
 | Agent / Reviewer | Unresolved Issue |
 |-----------------|-----------------|

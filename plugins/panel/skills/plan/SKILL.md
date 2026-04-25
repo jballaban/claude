@@ -1,12 +1,13 @@
 ---
 name: plan
-description: Breaks a spec, feature, or goal into a phased implementation plan with independently executable tasks per phase. Uses multi-domain expert analysis to identify all required work, then synthesizes a dependency-ordered phase structure. Phases are sequential; tasks within each phase are parallelizable. Output is a structured plan only — never implementation.
+description: Takes a spec and produces a phased implementation plan with independently executable tasks per phase. Runs the spec through the panel pipeline — asking domain experts to identify the work items their domain requires and their dependencies — then synthesizes a dependency-ordered phase structure. Phases are sequential; tasks within each phase are parallelizable. Output is a plan only — no implementation.
 ---
 
 # Plan
 
-**Tier:** Standard
-**When to use instead:** Quick feasibility check → `/ask` · Deep architecture review → `/council`
+**Built on:** Panel pipeline
+**When to use:** You have a spec (from `/panel`, `/council`, or written yourself) and want to break it into executable phases.
+**When to use panel/council first:** If you don't have a spec yet, run `/panel` or `/council` to build one, then pass the result to `/plan`.
 
 ---
 
@@ -18,7 +19,19 @@ description: Breaks a spec, feature, or goal into a phased implementation plan w
 | `AGENT_MIN` | 3 |
 | `AGENT_MAX` | 7 |
 | `TIER_NAME` | plan |
-| `DEPTH_INSTRUCTION` | Think in concrete work items your domain would own. For each item, note whether it is foundational (other work depends on it existing first), core (the primary deliverable), or hardening (polish, edge cases, scale). Be specific enough that a developer could pick this up as a task. Avoid abstract concerns — translate them into something buildable. |
+| `DEPTH_INSTRUCTION` | Analyze the spec to identify every concrete work item your domain would own in implementing it. Classify each item as: **foundational** (other work depends on it existing first), **core** (primary deliverable), or **hardening** (polish, edge cases, production-readiness). Note any dependencies between items — if item B requires item A to exist first, say so explicitly. Size each item as roughly one developer's work item (a single PR, a day or two of focused work). Do not write code or create files — identify and classify work only. |
+
+---
+
+## How /plan works
+
+/plan runs the panel pipeline with one specific question:
+
+> **"Given this spec, what work items does each domain require, and in what order must they be done?"**
+
+Domain experts analyze the spec from their perspective, identify their work items, and note dependencies. These are synthesized into phases where:
+- **Phases are sequential** — Phase N must be complete before Phase N+1 begins
+- **Tasks within a phase are independent** — any task in a phase can be started without waiting for another task in the same phase
 
 ---
 
@@ -26,47 +39,34 @@ description: Breaks a spec, feature, or goal into a phased implementation plan w
 
 **This skill produces a plan only. No code, no files, no implementation.**
 
-**Parallel execution:** When spawning agents in Steps 4 and 6, launch ALL agents simultaneously in a single response. Never wait for one agent to complete before spawning the next.
+**Parallel execution:** Launch all agents simultaneously in Steps 4 and 6. Never wait for one to complete before spawning the next.
 
 ---
 
-## Steps 0–3
+## Steps 0–4
 
-Follow Steps 0–3 exactly as defined in [../shared/pipeline.md](../shared/pipeline.md):
-- Step 0: Context Gathering
-- Step 1: Domain Identification
-- Step 2: Coverage Check (including Advisory Level)
-- Step 3: Dynamic Agent Synthesis (including the always-present adversarial agent)
+Follow Steps 0–4 exactly as defined in [../shared/pipeline.md](../shared/pipeline.md), with these specifics:
 
----
-
-## Step 4 · Parallel Agent Analysis
-
-Use the domain agent prompt and adversarial agent prompt exactly as defined in [../shared/pipeline.md](../shared/pipeline.md) Step 4, including the no-code constraint and the `DEPTH_INSTRUCTION` from this skill's tier parameters above.
-
-Render agent outputs using the Step 4 markdown format from the shared pipeline.
+- The **request** passed to agents is: `"Given the following spec, identify the implementation work items your domain requires and their dependencies: [SPEC]"`
+- Use the `DEPTH_INSTRUCTION` from this skill's tier parameters above (not the shared pipeline's depth instruction)
+- Include the always-present adversarial agent from Step 3
 
 ---
 
 ## Step 5 · Phased Consolidation
 
-Merge all agent outputs into a **phased implementation plan**.
-
-**Core constraint:**
-- Phases are **sequential** — Phase N must be fully complete before Phase N+1 begins
-- Tasks within a phase are **independent** — any task in a phase can be started without waiting for another task in the same phase to finish
-- A developer could pick up any single task in a phase and work it to completion in isolation
+Merge all agent outputs into a **phased implementation plan**. This replaces the shared pipeline's Step 5 consolidation.
 
 **Phasing rules:**
-1. Let the dependencies determine the number of phases — do not force a fixed count
+1. Let dependencies determine the number of phases — do not force a fixed count
 2. Phase 1 is always foundational: infrastructure, schemas, contracts, tooling — things every other phase depends on
-3. Critical agent items become early-phase tasks; important items become mid-phase; nice-to-have items become late-phase or a final hardening phase
+3. Foundational items from agents → Phase 1; core items → middle phases; hardening items → final phase(s)
 4. If a task in a phase depends on another task in the same phase, promote the dependency to the previous phase
-5. Each phase should produce a testable or demonstrable outcome — not just intermediate work
-6. Name phases by what they deliver ("API Foundation", "Core Authentication", "User Dashboard", "Production Hardening"), not just by number
-7. Integrate adversarial agent's attack vectors: if a vector points to a structural risk in the phasing order, resequence; otherwise add to Risks section
+5. Each phase must produce a testable or demonstrable outcome — not just intermediate state
+6. Name phases by what they deliver ("API Foundation", "Core Auth", "User Dashboard", "Production Hardening"), not just a number
+7. Fold adversarial attack vectors into the Risks section, or into the phase plan if they require a specific mitigation task
 
-**Task granularity:** Size tasks as roughly one developer's work item — one PR, a day or two of focused work. Too coarse: "implement authentication." Right: "Build JWT generation and validation middleware." Too fine: "Create the users table migration."
+**Task granularity:** One developer, one PR, roughly a day or two. "Build JWT validation middleware" — not "implement auth" or "add the JWT secret to config."
 
 **Output — Step 5:**
 
@@ -78,12 +78,12 @@ _If any CONSULT-level domain was identified in Step 2, inject first:_
 
 ### Phase 1 — [Name]
 **Prerequisite:** none
-**Delivers:** [what this phase produces and what it unlocks for the next phase]
+**Delivers:** [what this phase produces and what it unlocks]
 
 | # | Task | Domain | Notes |
 |---|------|--------|-------|
-| 1.1 | [concrete task description] | [domain] | [optional: parallelism or dependency note] |
-| 1.2 | [concrete task description] | [domain] | |
+| 1.1 | [concrete task] | [domain] | [dependency or parallelism note if needed] |
+| 1.2 | [concrete task] | [domain] | |
 
 ### Phase 2 — [Name]
 **Prerequisite:** Phase 1 complete
@@ -91,13 +91,15 @@ _If any CONSULT-level domain was identified in Step 2, inject first:_
 
 | # | Task | Domain | Notes |
 |---|------|--------|-------|
-| 2.1 | [concrete task description] | [domain] | |
+| 2.1 | [concrete task] | [domain] | |
 
 [...additional phases as the work requires...]
 
-### Risks & Open Questions
-- `risk` [concern that could affect phasing or task execution] _(source: agent)_
-- `question` [unresolved decision that could change the plan] _(source: agent)_
+### Risks
+- `risk` [concern that affects phasing or execution] _(source: agent)_
+
+### Open Questions _(omit if none)_
+- [Unresolved decision that could change the plan] _(source: agent)_
 ```
 
 ---
@@ -106,40 +108,35 @@ _If any CONSULT-level domain was identified in Step 2, inject first:_
 
 Run three tracks **simultaneously** using the validation prompts from [../shared/pipeline.md](../shared/pipeline.md) Step 6, substituting `[STEP_5_OUTPUT]` with the phased plan above.
 
-The Naive Plan Reviewer (Track A) checks whether the phases cover everything requested.
-The scope-only domain agents (Track B) check whether the phasing introduced scope beyond the original request.
+The Naive Plan Reviewer (Track A) checks whether the phases cover everything in the spec.
+The scope-only domain agents (Track B) check whether phasing introduced scope beyond the spec.
 The sighted adversarial agent (Track C) checks whether the phase ordering is sound and task independence assumptions hold.
 
-Use the same rating definitions and overall status logic (PASS / REVIEW / RERUN / RESCOPE) from the shared pipeline.
+Use the same rating definitions and overall status (PASS / REVIEW / RERUN / RESCOPE) from the shared pipeline.
 
 ---
 
 ## Step 7 · Final Output
 
-**Result-first.** The phased plan appears before analysis detail.
+**Result-first.** Phased plan before analysis detail.
+
+**If PASS or REVIEW:**
 
 ```markdown
 # /plan: [one-line description of what is being planned]
 
 ## Result
-**Status: [STATUS emoji + word]**
-```
-
-**If PASS or REVIEW:**
-
-```markdown
-## Result
 **Status: ✅ PASS** (or ⚠️ REVIEW)
 
-[If REVIEW — caution table before the plan:]
+[If REVIEW:]
 **Cautions — proceed with awareness:**
 | Source | Concern |
 |--------|---------|
 | [agent/reviewer] | [yellow reason] |
 
-[The full phased plan from Step 5]
+[Full phased plan from Step 5]
 
-> All agents in this analysis share the same underlying model weights — consensus reflects consistency, not independent validation. Treat this plan as structured input for your own judgment, not a prescription.
+> All agents in this analysis share the same underlying model weights — consensus reflects consistency, not independent validation. Treat this plan as structured input for your own judgment.
 
 ---
 
@@ -173,20 +170,17 @@ Use the same rating definitions and overall status logic (PASS / REVIEW / RERUN 
 ## Result
 **Status: 🔴 RERUN**
 
-The following concerns prevent a reliable plan from being produced. Resolve before re-running:
+The following concerns prevent a reliable phase plan from being produced:
 
 | Source | Issue |
 |--------|-------|
 | [agent/reviewer] | [red reason] |
 
 Resolve:
-- [ ] [specific fix 1]
-- [ ] [specific fix 2]
+- [ ] [specific fix]
 
-**Re-run (RERUN-DELTA — deficient domains + adversarial only):**
-Tier: /plan (or escalate to `/council` if concerns are systemic)
 Re-run scope: domains [list] + adversarial agent
-Prompt addition: "[specific context to add]"
+Prompt addition: "[additional context needed]"
 ```
 
 **If RESCOPE:**
@@ -195,17 +189,9 @@ Prompt addition: "[specific context to add]"
 ## Result
 **Status: 🔴 RESCOPE**
 
-The plan revealed scope beyond the original request. Prior analyses are incomplete for the expanded scope — do not patch.
-
-| Source | Scope Change |
-|--------|-------------|
-| [agent/reviewer] | [what new scope appeared] |
-
-Use the revised prompt below for a full re-run:
+The plan revealed scope beyond the provided spec. Re-run with:
 
 ---
 [COMPLETE REVISED PROMPT — drafted in full by the orchestrator, ready to paste as-is]
 ---
-
-Tier: /plan (or escalate if expanded scope increases complexity)
 ```
