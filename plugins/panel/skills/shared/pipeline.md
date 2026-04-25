@@ -25,17 +25,7 @@ Injected by the calling skill:
 - `TIER_NAME` — ask | panel | council
 - `DEPTH_INSTRUCTION` — per-tier instruction injected into every agent prompt
 
-**Phases are optional and contextual.** Only include phase assignments if the request naturally maps to a phased progression. For strategy questions, audits, or analysis tasks, phases often don't apply — omit them entirely.
-
-When phases do apply, use names that fit the work. Suggested vocabulary (not required):
-- `discovery` — requirements, research, decisions needed before starting
-- `design` — architecture, spec, interface or structural design
-- `implementation` — building
-- `validation` — testing, review, verification
-- `release` — deployment, rollout, migration
-- `post-launch` — monitoring, cleanup, follow-up
-
-Agents may define their own phase names when the suggested vocabulary doesn't fit the domain (e.g., `research`, `outreach`, `measurement`).
+Agent responses are structured by **priority level** — critical, important, nice-to-have — with each item carrying a **type** label describing its nature. Assumptions are collected separately, outside priority categorization.
 
 ---
 
@@ -197,31 +187,40 @@ Return a JSON block inside <agent_analysis> tags:
   "assumptions": [
     "What you assumed about the request to proceed — omit field if none"
   ],
-  "blockers": [
-    "Issues that must be resolved before proceeding — omit field if none"
-  ],
-  "risks": [
-    "Near-term concerns that will cause failure or significant problems if ignored"
-  ],
-  "long_term_implications": [
-    "Structural or compounding concerns that become expensive or problematic over time — omit field if none"
-  ],
-  "recommendations": [
-    "Specific, actionable recommendations from your domain"
-  ],
-  "open_questions": [
-    "Decisions or unknowns that must be resolved — omit field if none"
-  ],
-  "phase_assignments": [
+  "critical": [
     {
-      "phase": "[name appropriate to the work — omit this entire field if phases don't apply]",
-      "actions": ["Specific actions your domain owns in this phase"]
+      "type": "blocker | risk | preserve | recommendation | question",
+      "point": "Must be addressed — skipping causes failure, a security issue, or blocks progress entirely"
+    }
+  ],
+  "important": [
+    {
+      "type": "blocker | risk | preserve | recommendation | question",
+      "point": "Should be addressed — skipping creates meaningful risk or lost value"
+    }
+  ],
+  "nice_to_have": [
+    {
+      "type": "recommendation | question",
+      "point": "Worth doing if time allows — low impact if deferred"
     }
   ]
 }
 </agent_analysis>
 
-Include only fields where your domain has something meaningful to contribute. Omit `phase_assignments` entirely if the work doesn't naturally decompose into phases.
+**Priority levels:**
+- `critical` — must be addressed; skipping causes failure, a security issue, or blocks progress entirely
+- `important` — should be addressed; skipping creates meaningful risk or lost value but won't necessarily block
+- `nice_to_have` — worth doing if time allows; low impact if deferred
+
+**Type labels:**
+- `blocker` — a prerequisite that must be resolved before work can proceed
+- `risk` — something that could cause failure or significant harm if not mitigated
+- `preserve` — an existing behavior, pattern, or constraint that must not be broken
+- `recommendation` — an actionable improvement or best practice
+- `question` — a decision or unknown that needs resolution
+
+Omit any priority level your domain has nothing to contribute to. `assumptions` is always outside priority categorization.
 ```
 
 **Few-shot examples — what good agent analysis looks like:**
@@ -233,28 +232,22 @@ Request: Build a JWT authentication system for a Next.js application.
 Agent: JWT Implementation Specialist (expertise: nextjs-specialist, backend-developer, security-auditor)
 
 <thinking>
-The main risk here is token storage — localStorage is the common mistake. I should flag it as a risk since there's technically a tradeoff, but httpOnly cookies are clearly the right default. The refresh flow is equally important and almost always forgotten in early implementations.
+Token storage is the most critical issue — localStorage is the common mistake and it's a hard security flaw, not a preference. The refresh flow is important but won't block launch if deferred carefully. Using next-auth is a nice-to-have optimization.
 </thinking>
 <agent_analysis>
 {
   "agent": "JWT Implementation Specialist",
   "domain": "Token-based authentication implementation in Next.js",
-  "risks": [
-    "Storing JWT in localStorage exposes tokens to XSS attacks — httpOnly cookies are the correct approach",
-    "Without a token refresh mechanism, users will be silently logged out when tokens expire"
+  "critical": [
+    { "type": "risk", "point": "Storing JWT in localStorage exposes tokens to XSS attacks — httpOnly, Secure, SameSite=Strict cookies are the only safe default" }
   ],
-  "recommendations": [
-    "Store JWT in httpOnly, Secure, SameSite=Strict cookies — never in localStorage or sessionStorage",
-    "Implement a /api/auth/refresh endpoint with silent refresh logic triggered before expiry",
-    "Use next-auth rather than rolling custom token logic — it handles edge cases that are easy to miss"
+  "important": [
+    { "type": "risk", "point": "Without a token refresh mechanism, users will be silently logged out when tokens expire" },
+    { "type": "recommendation", "point": "Implement a /api/auth/refresh endpoint with silent refresh logic triggered before expiry" },
+    { "type": "question", "point": "What is the desired session duration — short-lived tokens with refresh, or long-lived single tokens?" }
   ],
-  "open_questions": [
-    "What is the desired session duration — short-lived tokens with refresh, or long-lived single tokens?"
-  ],
-  "phase_assignments": [
-    { "phase": "design", "actions": ["Define token lifecycle: issue, refresh, revoke", "Decide: next-auth vs custom implementation"] },
-    { "phase": "implementation", "actions": ["Implement login endpoint with bcrypt comparison", "Implement httpOnly cookie token storage and middleware"] },
-    { "phase": "validation", "actions": ["Test token expiry and silent refresh flow", "Verify tokens are not accessible via document.cookie"] }
+  "nice_to_have": [
+    { "type": "recommendation", "point": "Use next-auth rather than rolling custom token logic — it handles edge cases that are easy to miss" }
   ]
 }
 </agent_analysis>
@@ -266,28 +259,21 @@ Request: Build a JWT authentication system for a Next.js application.
 Agent: User Experience & Conversion Specialist (expertise: ux-researcher, product-manager)
 
 <thinking>
-The technical team will handle the token mechanics. My domain is the user-facing flow — login friction, error clarity, and session UX. These are often treated as afterthoughts but directly affect retention.
+The technical team will handle token mechanics. My domain is user-facing flow — login friction, error clarity, session UX. Vague error messages are an important issue that drives real support cost. Social login and remember-me are lower priority.
 </thinking>
 <agent_analysis>
 {
   "agent": "User Experience & Conversion Specialist",
   "domain": "User-facing authentication flow, friction, and conversion impact",
-  "risks": [
-    "Aggressive session timeouts increase re-login friction and measurably hurt retention",
-    "Generic error messages like 'invalid credentials' frustrate users and increase support load"
+  "important": [
+    { "type": "risk", "point": "Generic error messages like 'invalid credentials' frustrate users and increase support load — distinguish wrong password, account not found, and account locked" },
+    { "type": "risk", "point": "Aggressive session timeouts increase re-login friction and measurably hurt retention" },
+    { "type": "recommendation", "point": "Surface the forgotten password link prominently before users hit frustration — not hidden below the form" }
   ],
-  "recommendations": [
-    "Offer a 'remember me' option that extends session duration for returning users on trusted devices",
-    "Show distinct error messages for wrong password vs. account not found vs. account locked",
-    "Surface the forgotten password link prominently before users hit frustration — not hidden below the form"
-  ],
-  "open_questions": [
-    "Should enterprise accounts have stricter session policies than individual users?",
-    "Is social login (Google / GitHub) in scope for this release or deferred?"
-  ],
-  "phase_assignments": [
-    { "phase": "design", "actions": ["Define session duration defaults per user segment", "Write error message copy for every failure state"] },
-    { "phase": "validation", "actions": ["Run the login flow with 3–5 real users before launch", "Check error message clarity with someone unfamiliar with the system"] }
+  "nice_to_have": [
+    { "type": "recommendation", "point": "Offer a 'remember me' option that extends session duration for returning users on trusted devices" },
+    { "type": "question", "point": "Is social login (Google / GitHub) in scope for this release or deferred?" },
+    { "type": "question", "point": "Should enterprise accounts have stricter session policies than individual users?" }
   ]
 }
 </agent_analysis>
@@ -301,15 +287,17 @@ Parse each agent's JSON and render as readable markdown under a named subheading
 ### [Agent Name]
 **Domain:** [domain]
 
-**Assumptions:** [bulleted list — omit section if none]
-**Blockers:** [bulleted list — omit section if none]
-**Risks:** [bulleted list]
-**Long-term implications:** [bulleted list — omit if none]
-**Recommendations:** [bulleted list]
-**Open questions:** [bulleted list — omit if none]
+**Assumptions:** _(omit section if none)_
+- [assumption]
 
-**Phase assignments:** _(omit section if phases don't apply)_
-- *[phase]*: [actions]
+**Critical** _(omit section if none)_
+- `[type]` [point]
+
+**Important** _(omit section if none)_
+- `[type]` [point]
+
+**Nice to have** _(omit section if none)_
+- `[type]` [point]
 ```
 
 ---
@@ -318,37 +306,27 @@ Parse each agent's JSON and render as readable markdown under a named subheading
 
 Merge all Step 4 outputs into a single coherent plan.
 
-1. **Deduplicate** — merge identical or near-identical concerns, noting all source agents
-2. **Escalate blockers** — anything any agent called a blocker is a blocker in the plan
-3. **Preserve disagreements** — where agents contradict, surface both as a tradeoff; do not silently resolve
-4. **Action grouping** — group actions by phases only if phases apply; use phase names appropriate to the work. If phases don't apply, list actions as a flat prioritized list. Within each phase order: blockers first → risk mitigation → core work → validation → cleanup
+1. **Deduplicate** — merge identical or near-identical concerns across agents, noting all sources
+2. **Respect priority** — preserve each item at its highest assigned level across agents; never silently downgrade a critical item
+3. **Preserve disagreements** — where agents assign different priorities to the same concern, surface both as a tradeoff; do not silently resolve
+4. **Ordering within levels** — within Critical: blockers first, then risks, then preserves; within Important and Nice to have: recommendations and questions after risks and preserves
 5. **Coverage check** — verify every Step 1 domain appears somewhere in the plan; flag any that don't (including domains from agents that failed in Step 4)
 
 **Output — Step 5:**
 ```markdown
 ### Assumptions & Ambiguity
-- [Assumption made to proceed, or ambiguity that could change the analysis] _(agent)_
+- [Assumption or ambiguity that could change the analysis] _(agent)_
 
-_(Omit section if no assumptions were made and the request was fully specified)_
+_(Omit section if none)_
 
-### Blockers
-- [ ] [Blocker] _(sources: agent-a, agent-b)_
+### Critical
+- `[type]` [Point] _(sources: agent-a, agent-b)_
 
-### Risks
-- [Risk] _(agent)_
+### Important
+- `[type]` [Point] _(agent)_
 
-### Long-term Implications
-- [Implication] _(agent)_
-
-### Open Questions
-- [Question] _(agent)_
-
-### Action Plan
-
-_(Group actions by phases only if phases apply. Use phase names appropriate to the work — do not force development phases onto non-development tasks. If phases don't apply, list actions as a flat prioritized list instead.)_
-
-#### [Phase name] _(if applicable)_
-- [ ] [Action] _(agent)_
+### Nice to Have
+- `[type]` [Point] _(agent)_
 
 ### Tradeoffs
 | Topic | Option A | Option B | Recommendation |
@@ -382,7 +360,7 @@ Use this prompt for each agent:
 You are a [NAME] with expertise in [EXPERTISE_BLEND].
 
 Review the consolidated plan from your domain's perspective only.
-Check whether your blockers were addressed, your risks acknowledged, and your recommendations reflected.
+Check whether your critical items were addressed, your important concerns acknowledged, and your recommendations reflected.
 
 Return a JSON block inside <validation> tags:
 
@@ -421,7 +399,7 @@ Red — blocker was not addressed:
 **Rating definitions:**
 - 🟢 **Green** — domain concerns are adequately addressed; proceed with confidence
 - 🟡 **Yellow** — minor gaps or unresolved questions remain; proceed with caution
-- 🔴 **Red** — a blocker or critical concern from this agent's Step 4 was not addressed in the plan
+- 🔴 **Red** — a critical item from this agent's Step 4 was not addressed in the plan
 
 **Overall status:**
 - All green → **PASS**
