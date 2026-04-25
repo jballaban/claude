@@ -6,6 +6,8 @@ When building a synthesized agent, identify which catalog domains cover the expe
 
 Install any catalog agent with: `claude agent add VoltAgent/awesome-claude-code-subagents/<name>`
 
+**Advisory Level:** All entries are `STANDARD` unless marked `🔶 CONSULT`. CONSULT entries involve domains (legal, financial, compliance, ethics) where model-generated analysis should not substitute for qualified professional judgment. When a CONSULT domain appears in Step 2 coverage check, inject the advisory note into Step 5 output.
+
 ## Contents
 - [Core Development](#core-development)
 - [Language Specialists](#language-specialists)
@@ -14,6 +16,7 @@ Install any catalog agent with: `claude agent add VoltAgent/awesome-claude-code-
 - [Data & AI](#data--ai)
 - [Developer Experience](#developer-experience)
 - [Business & Product](#business--product)
+- [Enterprise & Governance](#enterprise--governance)
 - [Meta & Orchestration](#meta--orchestration)
 - [Research & Analysis](#research--analysis)
 
@@ -96,7 +99,7 @@ Install any catalog agent with: `claude agent add VoltAgent/awesome-claude-code-
 | `penetration-tester` | Offensive security, vulnerability testing |
 | `accessibility-tester` | WCAG compliance, a11y testing |
 | `chaos-engineer` | Resilience testing, failure injection |
-| `compliance-auditor` | Regulatory compliance, audit trails |
+| `compliance-auditor` | Regulatory compliance, audit trails — 🔶 CONSULT |
 | `error-detector` | Error pattern identification, edge cases |
 
 ## Data & AI
@@ -138,6 +141,18 @@ Install any catalog agent with: `claude agent add VoltAgent/awesome-claude-code-
 | `project-manager` | Project planning, risk, milestones |
 | `scrum-master` | Agile ceremonies, sprint planning |
 
+## Enterprise & Governance
+| Agent | Specialty | Advisory Level |
+|-------|-----------|----------------|
+| `legal-counsel` | Contract review, liability, regulatory interpretation, IP | 🔶 CONSULT |
+| `compliance-specialist` | Regulatory compliance, policy adherence, audit preparation | 🔶 CONSULT |
+| `financial-analyst` | Financial modeling, cost/benefit, runway, unit economics | 🔶 CONSULT |
+| `hr-change-specialist` | Org change management, team restructuring, people impact | STANDARD |
+| `executive-strategist` | C-suite alignment, strategic narrative, board communication | STANDARD |
+| `procurement-specialist` | Vendor selection, contract strategy, sourcing | STANDARD |
+| `ethics-reviewer` | Ethical analysis, fairness, harm assessment, responsible design | 🔶 CONSULT |
+| `communications-strategist` | Internal/external messaging, crisis comms, stakeholder communication | STANDARD |
+
 ## Meta & Orchestration
 | Agent | Specialty |
 |-------|-----------|
@@ -156,4 +171,3 @@ Install any catalog agent with: `claude agent add VoltAgent/awesome-claude-code-
 | `trend-forecaster` | Technology trend analysis |
 | `project-validator` | Validating project feasibility |
 | `market-researcher` | Market sizing, opportunity analysis |
-

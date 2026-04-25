@@ -21,9 +21,11 @@ Shared algorithm for `/ask`, `/panel`, and `/council`. Each skill defines its ti
 
 Injected by the calling skill:
 - `DOMAIN_COUNT` — how many top domains to identify
-- `AGENT_MIN` / `AGENT_MAX` — agent count range
+- `AGENT_MIN` / `AGENT_MAX` — domain agent count range (the adversarial agent is always additional)
 - `TIER_NAME` — ask | panel | council
-- `DEPTH_INSTRUCTION` — per-tier instruction injected into every agent prompt
+- `DEPTH_INSTRUCTION` — per-tier instruction injected into every domain agent prompt
+
+**Writing effective DEPTH_INSTRUCTION:** Use scoped enumeration ("cover the 3 most significant concerns") or token budgets ("use ~200 tokens") — not sentence counts ("be thorough in 3–5 sentences"), which produce padding rather than depth.
 
 Agent responses are structured by **priority level** — critical, important, nice-to-have — with each item carrying a **type** label describing its nature. Assumptions are collected separately, outside priority categorization.
 
@@ -111,28 +113,39 @@ For each domain:
 - **Partial** — catalog has adjacent territory but not a direct match
 - **Gap** — no catalog concept covers this domain (will need a fully synthesized agent)
 
-Ignore catalog concepts irrelevant to the request type (e.g. language specialists for a pure business strategy question).
+Also note the **Advisory Level** for each domain:
+- **STANDARD** — model-generated analysis is appropriate; no structural caveat required
+- **CONSULT** — domain (e.g., legal, financial, compliance, ethics) requires qualified professional judgment; model analysis should not substitute for it
 
 **Output — Step 2:**
 ```
-| Domain | Catalog Coverage | Status |
-|--------|-----------------|--------|
-| [domain] | [catalog concept(s)] | Covered / Partial / Gap |
+| Domain | Catalog Coverage | Status | Advisory Level |
+|--------|-----------------|--------|----------------|
+| [domain] | [catalog concept(s)] | Covered / Partial / Gap | STANDARD / CONSULT |
 ```
+
+If any CONSULT-level domain is present, inject this advisory note at the top of Step 5 output (naming the specific domains):
+> **Advisory note:** This analysis includes CONSULT-level domain(s): [list]. Model-generated analysis should not substitute for qualified professional judgment in these areas.
 
 ---
 
 ## Step 3 · Dynamic Agent Synthesis
 
-Build **`AGENT_MIN`–`AGENT_MAX`** agents ensuring every identified domain has representation.
+Build **`AGENT_MIN`–`AGENT_MAX`** domain agents, plus **one adversarial agent** (always included, regardless of tier or agent count).
 
-**Synthesis rules:**
+**Domain agent synthesis rules:**
 - Closely related or overlapping domains → consolidate into one blended agent
 - Domains with catalog gaps → synthesize from adjacent catalog concepts; explicitly name the gap in the agent's task focus
 - Give every agent a task-specific name, not a generic role title ("Stripe Webhook Reliability Specialist" not "Backend Developer")
 - Lower tiers: consolidate aggressively. Higher tiers: be granular — one domain can split into multiple focused agents.
 
-For each synthesized agent, define:
+**Adversarial agent (always include one):**
+- Name: `[Topic] Adversarial Reviewer`
+- Mode: blind in Step 4, sighted in Step 6
+- Focus: pre-mortem failure analysis and red-team thinking
+- Schema: distinct from domain agents — uses attack_vectors / steelman_defense / verdict (see Step 4 adversarial prompt)
+
+For each domain agent, define:
 ```
 Name: [task-specific title]
 Expertise blend: [catalog concepts drawn from, or "synthesized: [domain]" for gaps]
@@ -144,17 +157,21 @@ Focus: [what specific aspect of THIS request this agent analyzes]
 ```
 | Agent | Expertise Blend | Covers | Focus |
 |-------|----------------|--------|-------|
+
+Adversarial agent: [Topic] Adversarial Reviewer (blind in Step 4 → sighted in Step 6)
 ```
 
 ---
 
 ## Step 4 · Parallel Agent Analysis
 
-Spawn all synthesized agents **simultaneously** (see orchestrator instructions above). Wait for all responses before proceeding.
+Spawn all domain agents **and the adversarial agent simultaneously** (see orchestrator instructions). Wait for all responses before proceeding.
 
-If an agent returns malformed output or fails: note the failure in Step 4 output, mark that agent's domain as "unanalyzed", flag the coverage gap in Step 5, and continue with remaining agents. A single agent failure must not block the pipeline.
+If an agent returns malformed output or fails: note the failure in Step 4 output, mark that domain as "unanalyzed", flag the coverage gap in Step 5, and continue. A single agent failure must not block the pipeline.
 
-Use this prompt for each agent (substitute all bracketed values from Step 0 and Step 3):
+### Domain agent prompt
+
+Use this prompt for each domain agent (substitute all bracketed values from Steps 0 and 3):
 
 ```
 <project_context>
@@ -182,9 +199,20 @@ When you disagree with the direction itself (not just implementation details), s
 [DEPTH_INSTRUCTION]
 </depth_instruction>
 
-You may include a brief <thinking> block to show your reasoning before the JSON — this is optional but helpful.
+Return a JSON block inside <agent_analysis> tags. You may include a brief <thinking> block before the JSON.
 
-Return a JSON block inside <agent_analysis> tags:
+**Priority levels:**
+- `critical` — must be addressed; skipping causes failure, a security issue, or blocks progress entirely
+- `important` — should be addressed; skipping creates meaningful risk or lost value but won't necessarily block
+- `nice_to_have` — worth doing if time allows; low impact if deferred
+
+**Type labels:**
+- `risk` — something that could cause failure or significant harm if not mitigated
+- `preserve` — an existing behavior, pattern, or constraint that must not be broken
+- `recommendation` — an actionable improvement or best practice
+- `question` — a decision or unknown that needs resolution
+
+Omit any priority level your domain has nothing to contribute to. `assumptions` is always outside priority categorization.
 
 <agent_analysis>
 {
@@ -195,13 +223,13 @@ Return a JSON block inside <agent_analysis> tags:
   ],
   "critical": [
     {
-      "type": "blocker | risk | preserve | recommendation | question",
+      "type": "risk | preserve | recommendation | question",
       "point": "Must be addressed — skipping causes failure, a security issue, or blocks progress entirely"
     }
   ],
   "important": [
     {
-      "type": "blocker | risk | preserve | recommendation | question",
+      "type": "risk | preserve | recommendation | question",
       "point": "Should be addressed — skipping creates meaningful risk or lost value"
     }
   ],
@@ -213,23 +241,55 @@ Return a JSON block inside <agent_analysis> tags:
   ]
 }
 </agent_analysis>
-
-**Priority levels:**
-- `critical` — must be addressed; skipping causes failure, a security issue, or blocks progress entirely
-- `important` — should be addressed; skipping creates meaningful risk or lost value but won't necessarily block
-- `nice_to_have` — worth doing if time allows; low impact if deferred
-
-**Type labels:**
-- `blocker` — a prerequisite that must be resolved before work can proceed
-- `risk` — something that could cause failure or significant harm if not mitigated
-- `preserve` — an existing behavior, pattern, or constraint that must not be broken
-- `recommendation` — an actionable improvement or best practice
-- `question` — a decision or unknown that needs resolution
-
-Omit any priority level your domain has nothing to contribute to. `assumptions` is always outside priority categorization.
 ```
 
-**Few-shot examples — what good agent analysis looks like:**
+### Adversarial agent prompt (blind phase)
+
+Use this distinct prompt for the adversarial agent in Step 4:
+
+```
+<project_context>
+[STEP_0_CONTEXT_SUMMARY]
+</project_context>
+
+<request>
+[ORIGINAL_REQUEST]
+</request>
+
+You are a [TOPIC] Adversarial Reviewer. Your role is to find failure modes — not to endorse the approach.
+
+<focus>
+Pre-mortem analysis: assume this plan was implemented exactly as described and produced a bad outcome. What went wrong?
+Red team: if you were trying to defeat, circumvent, or cause this approach to fail, how would you do it?
+Do NOT offer constructive improvements — only identify failure modes, vulnerabilities, and unconsidered paths.
+</focus>
+
+<expert_judgment>
+You are the adversarial voice in this analysis. Challenge every assumption. Be specific and concrete — vague risks are not useful. Your value is in surfacing what others miss or avoid saying.
+</expert_judgment>
+
+Return a JSON block inside <agent_analysis> tags using the adversarial schema below — NOT the standard domain agent schema.
+
+<agent_analysis>
+{
+  "agent": "[TOPIC] Adversarial Reviewer",
+  "mode": "blind",
+  "attack_vectors": [
+    {
+      "severity": "critical | important",
+      "vector": "Specific failure mode, vulnerability, or path to a bad outcome"
+    }
+  ],
+  "steelman_defense": [
+    "The strongest argument in favor of this approach that you must acknowledge honestly"
+  ],
+  "verdict": "fatal | severe | manageable | sound",
+  "verdict_reason": "One sentence: what makes this approach fundamentally strong or weak?"
+}
+</agent_analysis>
+```
+
+### Few-shot examples — what good domain agent analysis looks like
 
 <examples>
 <example>
@@ -309,9 +369,11 @@ The technical team will handle token mechanics. My domain is user-facing flow �
 </example>
 </examples>
 
-**Rendering — Step 4:**
-Parse each agent's JSON and render as readable markdown under a named subheading:
+### Rendering — Step 4
 
+Parse each agent's JSON and render as readable markdown under a named subheading.
+
+For domain agents:
 ```markdown
 ### [Agent Name]
 **Domain:** [domain]
@@ -329,39 +391,58 @@ Parse each agent's JSON and render as readable markdown under a named subheading
 - `[type]` [point]
 ```
 
+For the adversarial agent:
+```markdown
+### [Topic] Adversarial Reviewer _(blind)_
+
+**Attack Vectors:**
+- `[severity]` [vector]
+
+**Steelman Defense:**
+- [point]
+
+**Verdict:** [fatal | severe | manageable | sound] — [verdict_reason]
+```
+
 ---
 
 ## Step 5 · Consolidation
 
-Merge all Step 4 outputs into a single coherent plan.
+Merge all domain agent outputs into a **sequenced action plan** — an ordered list of concrete actions with dependencies, not a triage list grouped by severity.
 
-1. **Deduplicate** — merge identical or near-identical concerns across agents, noting all sources
-2. **Respect priority** — preserve each item at its highest assigned level across agents; never silently downgrade a critical item
-3. **Preserve disagreements** — where agents assign different priorities to the same concern, surface both as a tradeoff; do not silently resolve
-4. **Ordering within levels** — within Critical: blockers first, then risks, then preserves; within Important and Nice to have: recommendations and questions after risks and preserves
-5. **Coverage check** — verify every Step 1 domain appears somewhere in the plan; flag any that don't (including domains from agents that failed in Step 4)
+**Consolidation rules:**
+1. **Identify actionable items**: From all agents' critical and important outputs, extract discrete actions (recommendations that specify a concrete step, and risks that require a specific mitigation). These become action plan steps.
+2. **Identify informational items**: Risks and preserves that inform execution but don't map to a single discrete action — these become "Risks to Monitor."
+3. **Sequence by dependency**: Order actions by: (a) prerequisites — what must exist before this can proceed; (b) reversibility — irreversible actions later where possible; (c) priority — critical-sourced items before important-sourced items when ordering is otherwise ambiguous.
+4. **Deduplicate across agents**: Merge identical or near-identical concerns; note all source agents.
+5. **Preserve disagreements as tradeoffs**: Where agents disagree on approach or priority, surface both sides as a tradeoff — do not silently resolve.
+6. **Verify coverage**: Confirm every Step 1 domain is represented; flag any gaps.
+7. **Integrate adversarial findings**: Include the adversarial agent's attack vectors in "Risks to Monitor" or as specific action items if active mitigation is required.
 
 **Output — Step 5:**
+
+_If any CONSULT-level domain was identified in Step 2, inject this advisory note first:_
+> **Advisory note:** This analysis includes CONSULT-level domain(s): [list]. Model-generated analysis should not substitute for qualified professional judgment in these areas.
+
 ```markdown
-### Assumptions & Ambiguity
-- [Assumption or ambiguity that could change the analysis] _(agent)_
+### Action Plan
 
-_(Omit section if none)_
+| Step | Action | Prerequisites | Domain(s) | Reversible |
+|------|--------|---------------|-----------|------------|
+| 1 | [concrete action] | none | [domain] | yes |
+| 2 | [concrete action] | step 1 | [domain] | yes |
 
-### Critical
-- `[type]` [Point] _(sources: agent-a, agent-b)_
+### Risks to Monitor
+- `risk` [concern] _(source: agent-a, agent-b)_
 
-### Important
-- `[type]` [Point] _(agent)_
-
-### Nice to Have
-- `[type]` [Point] _(agent)_
-
-### Tradeoffs
+### Tradeoffs _(omit if none)_
 | Topic | Option A | Option B | Recommendation |
 |-------|----------|----------|----------------|
 
-### Coverage gaps _(if any Step 1 domains are unrepresented)_
+### Open Questions _(omit if none)_
+- [Decision or unknown requiring resolution before or during execution] _(source: agent)_
+
+### Coverage Gaps _(omit if none)_
 - [Domain]: not addressed in plan
 ```
 
@@ -369,21 +450,49 @@ _(Omit section if none)_
 
 ## Step 6 · Validation Round
 
-Spawn all agents **simultaneously** for a rating pass. Each agent receives the original request, the consolidated plan, and their own Step 4 analysis. Each agent performs **two checks**:
+Run three validation tracks **simultaneously**. Wait for all responses before proceeding.
 
-1. **Intent check** — were their critical and important items addressed faithfully, or were they missing / present but handled in a way that undermines their intent?
-2. **Scope check** — did the consolidated plan introduce material new scope that was not present in the original request? If so, does that new scope invalidate or materially change the agent's original analysis?
+### Track A — Naive Plan Reviewer
 
-Use this prompt for each agent:
+A fresh-prompt subagent with **no access to Step 4 agent analyses**. Checks whether the plan achieves the original request from an independent perspective.
 
 ```
 <request>
 [ORIGINAL_REQUEST]
 </request>
 
-<your_previous_analysis>
-[THIS_AGENT'S_FULL_STEP_4_JSON_OUTPUT]
-</your_previous_analysis>
+<plan>
+[STEP_5_OUTPUT]
+</plan>
+
+You are reviewing a plan produced by a multi-agent analysis system. You have NOT seen the agents' analyses — only the original request and the final plan.
+
+Evaluate: Does this plan actually achieve what was requested? Is anything the user asked for missing? Is anything in the plan disconnected from the request?
+
+Return a JSON block inside <validation> tags:
+
+<validation>
+{
+  "reviewer": "Naive Plan Reviewer",
+  "gaps": ["Things the user asked for that the plan does not address — omit if none"],
+  "additions": ["Things in the plan not connected to the request — omit if none"],
+  "rating": "green | yellow | red",
+  "type": "deficiency | scope_change",
+  "reason": "Required if yellow or red — name the specific gap or addition"
+}
+</validation>
+
+Omit `gaps`, `additions`, and `type` if none.
+```
+
+### Track B — Scope-only domain agents
+
+Original Step 4 domain agents re-prompted to check scope change only. The intent check from the old Step 6 is replaced by the Naive Plan Reviewer — domain agents no longer re-validate their own intent.
+
+```
+<request>
+[ORIGINAL_REQUEST]
+</request>
 
 <consolidated_plan>
 [STEP_5_OUTPUT]
@@ -391,64 +500,76 @@ Use this prompt for each agent:
 
 You are a [NAME] with expertise in [EXPERTISE_BLEND].
 
-Review the consolidated plan from your domain's perspective only. Perform two checks:
+Perform ONE check only:
 
-**Check 1 — Intent:** For each of your critical and important items, assess whether it was:
-- **Addressed with intent preserved** — the plan handles it in a way that achieves the underlying goal
-- **Addressed but intent undermined** — the plan mentions it but handles it in a way that defeats the purpose
-- **Missing** — not present in the plan at all
-
-**Check 2 — Scope:** Does the consolidated plan introduce material new scope that was not present in the original request? If yes — would that new scope change your analysis in a way that makes your Step 4 output incomplete or incorrect? If so, flag it: the entire pipeline should re-run with the full expanded scope rather than patching the current plan.
-
-Rate the plan using the definitions below. Your rating reflects the worst outcome across both checks.
+**Scope check:** Does the consolidated plan introduce material new scope that was not present in the original request? If yes — would that new scope change your domain's analysis significantly enough that your prior analysis is incomplete or wrong?
 
 Return a JSON block inside <validation> tags:
 
 <validation>
 {
   "agent": "[NAME]",
-  "rating": "green|yellow|red",
-  "type": "deficiency | scope_change",
-  "reason": "Required if yellow or red — one sentence. For deficiency: name the specific item and what is deficient. For scope_change: describe the new scope and why it invalidates your prior analysis."
+  "rating": "green | red",
+  "type": "scope_change",
+  "reason": "Required if red — describe the new scope and why it invalidates your prior analysis"
 }
 </validation>
 
-Omit `type` if rating is green.
+Rating must be green or red/scope_change only. Omit `type` if green.
 ```
 
-**Few-shot examples — what good validation looks like:**
+### Track C — Sighted adversarial agent
 
-<examples>
-<example>
-Scenario: Validating a consolidated plan for the JWT authentication system above.
+The adversarial agent from Step 4, now with full visibility of all agent analyses and the consolidated plan.
 
-Green — both checks pass:
+```
+<request>
+[ORIGINAL_REQUEST]
+</request>
+
+<your_blind_analysis>
+[ADVERSARIAL AGENT'S STEP 4 JSON OUTPUT]
+</your_blind_analysis>
+
+<all_agent_analyses>
+[ALL STEP 4 DOMAIN AGENT JSON OUTPUTS]
+</all_agent_analyses>
+
+<consolidated_plan>
+[STEP_5_OUTPUT]
+</consolidated_plan>
+
+You are the [TOPIC] Adversarial Reviewer. In Step 4, you analyzed this request blind. You now have full visibility of all agent analyses and the consolidated plan.
+
+Review adversarially:
+1. Were your blind attack vectors addressed in the plan, dismissed, or ignored?
+2. Do you see new failure modes now that you can see the full picture?
+3. Does the plan's sequencing introduce risk (wrong ordering, missing prerequisites)?
+4. Were critical concerns from other agents lost or distorted in consolidation?
+
+Return a JSON block inside <validation> tags:
+
 <validation>
-{ "agent": "JWT Implementation Specialist", "rating": "green" }
+{
+  "agent": "[TOPIC] Adversarial Reviewer",
+  "mode": "sighted",
+  "unresolved_vectors": ["Vectors from blind analysis not addressed by the plan — omit if none"],
+  "new_vectors": ["New failure modes visible after seeing the full picture — omit if none"],
+  "consolidation_distortions": ["Concerns present in agents but lost or undermined in consolidation — omit if none"],
+  "rating": "green | yellow | red",
+  "type": "deficiency | scope_change",
+  "reason": "Required if yellow or red"
+}
 </validation>
 
-Yellow — intent check: critical items fine, but an important item's intent was undermined:
-<validation>
-{ "agent": "User Experience & Conversion Specialist", "rating": "yellow", "type": "deficiency", "reason": "Error messaging was included but collapsed into a single generic message — the intent (distinct errors per failure state) was not preserved." }
-</validation>
-
-Red — intent check: a critical item's intent was undermined:
-<validation>
-{ "agent": "JWT Implementation Specialist", "rating": "red", "type": "deficiency", "reason": "Token storage was addressed but the plan recommends sessionStorage as a 'safer alternative to localStorage' — this still exposes tokens to XSS and defeats the httpOnly cookie requirement entirely." }
-</validation>
-
-Red — scope check: new scope invalidates prior analysis:
-<validation>
-{ "agent": "User Experience & Conversion Specialist", "rating": "red", "type": "scope_change", "reason": "The plan introduced a B2B enterprise SSO requirement that was not in the original request — my entire analysis assumed individual consumer accounts and is incomplete for enterprise identity flows." }
-</validation>
-</example>
-</examples>
+Omit `type` if green.
+```
 
 **Rating definitions:**
-- 🟢 **Green** — all critical and important items addressed with intent preserved; no material scope change
-- 🟡 **Yellow** — critical items fine; one or more important items missing or intent undermined; no material scope change
-- 🔴 **Red (deficiency)** — one or more critical items missing or intent undermined
-- 🔴 **Red (scope_change)** — consolidated plan introduced material new scope that invalidates the agent's prior analysis; pipeline must re-run with full expanded scope
+- 🟢 **Green** — no material gaps, scope changes, or unaddressed failure modes
+- 🟡 **Yellow** — non-critical gaps, minor distortions, or manageable failure modes not addressed
+- 🔴 **Red (deficiency)** — critical gap, key concern missing or intent undermined, or fatal/severe attack vectors unaddressed
+- 🔴 **Red (scope_change)** — consolidated plan introduced material new scope that invalidates prior analysis
 
 **Overall status:**
 - All green → **PASS**
@@ -456,14 +577,15 @@ Red — scope check: new scope invalidates prior analysis:
 - Any red (deficiency only) → **RERUN**
 - Any red (scope_change) → **RESCOPE**
 
+**RERUN-DELTA:** On RERUN, only re-spawn domain agents whose domains had red deficiencies plus the adversarial agent. Do not re-run all agents when only a subset had issues.
+
 **Output — Step 6:**
 ```
-| Agent | Rating | Type | Reason |
-|-------|--------|------|--------|
-| [Name] | 🟢 | — | — |
-| [Name] | 🟡 | deficiency | [reason] |
-| [Name] | 🔴 | deficiency | [reason] |
-| [Name] | 🔴 | scope_change | [reason] |
+| Track | Agent / Reviewer | Rating | Type | Reason |
+|-------|-----------------|--------|------|--------|
+| A — Naive | Naive Plan Reviewer | 🟢 | — | — |
+| B — Scope | [Agent Name] | 🟢 | — | — |
+| C — Adversarial | [Topic] Adversarial Reviewer | 🟡 | deficiency | [reason] |
 
 Overall: PASS | REVIEW | RERUN | RESCOPE
 ```
@@ -472,89 +594,223 @@ Overall: PASS | REVIEW | RERUN | RESCOPE
 
 ## Step 7 · Final Output
 
-Present the complete run to the user. Include every step.
+Present the run **result-first**: the Result section appears at the top before the analysis detail. Use the tier-specific template for the Result section, then render all steps (0–6) after the `---` divider.
 
-```markdown
-# /[TIER_NAME]: [one-line task summary]
-
-## Step 0 · Context
-[Step 0 output]
-
-## Step 1 · Domains
-[Step 1 output]
-
-## Step 2 · Coverage
-[Step 2 output]
-
-## Step 3 · Agents
-[Step 3 output]
-
-## Step 4 · Agent Analyses
-[Step 4 rendered output — each agent under its own subheading]
-
-## Step 5 · Consolidated Plan
-[Step 5 output]
-
-## Step 6 · Validation
-[Step 6 table + overall status]
+**The Result section is always the first thing the user sees.** Status, plan, and caveats come before agent analyses. This applies to all four status paths (PASS, REVIEW, RERUN, RESCOPE).
 
 ---
 
+### /ask output template
+
+Result section target: ~200 words. Action list only — no agent attribution, no tradeoffs table.
+
+```markdown
+# /ask: [one-line task summary]
+
 ## Result
+**Status: [STATUS emoji + word]**
+
+[If REVIEW — one-line caution per concern, inline]
+
+1. [Action]
+2. [Action]
+3. [Action]
+
+_This analysis reflects a single model's perspective — validate independently before acting._
+
+---
+
+## Analysis
+
+### Step 0 · Context
+[Step 0 output]
+
+### Step 1 · Domains
+[Step 1 output]
+
+### Step 2 · Coverage
+[Step 2 output]
+
+### Step 3 · Agents
+[Step 3 output]
+
+### Step 4 · Agent Analyses
+[Step 4 rendered output — each agent under its own subheading]
+
+### Step 5 · Consolidated Plan
+[Step 5 output]
+
+### Step 6 · Validation
+[Step 6 table + overall status]
 ```
 
-**If PASS:**
+---
+
+### /panel output template
+
+Result section target: ~400–600 words. Sequenced plan with tradeoffs. One-paragraph epistemic caveat.
+
 ```markdown
-**Status: ✅ PASS**
-All agents satisfied with the plan. Proceed with confidence.
+# /panel: [one-line task summary]
 
-[Restate the Step 5 consolidated plan cleanly, without agent attribution noise]
-```
+## Result
+**Status: [STATUS emoji + word]**
 
-**If REVIEW:**
-```markdown
-**Status: ⚠️ REVIEW**
-Plan is sound — proceed with these cautions noted:
-
-| Agent | Concern |
-|-------|---------|
+[If REVIEW:]
+**Cautions noted — proceed with awareness:**
+| Agent / Reviewer | Concern |
+|-----------------|---------|
 | [Name] | [yellow reason] |
 
-[Restate the Step 5 consolidated plan]
+### Action Plan
+[Sequenced action plan — table or numbered list with prerequisites]
+
+### Tradeoffs _(omit if none)_
+[Tradeoffs table]
+
+> **Note on independence:** All agents in this analysis share the same underlying model weights. They can surface different concerns but cannot provide genuinely independent validation. For decisions with significant consequences, seek qualified domain expert review.
+
+---
+
+## Analysis
+
+### Step 0 · Context
+[Step 0 output]
+
+### Step 1 · Domains
+[Step 1 output]
+
+### Step 2 · Coverage
+[Step 2 output]
+
+### Step 3 · Agents
+[Step 3 output]
+
+### Step 4 · Agent Analyses
+[Step 4 rendered output — each agent under its own subheading]
+
+### Step 5 · Consolidated Plan
+[Step 5 output]
+
+### Step 6 · Validation
+[Step 6 table + overall status]
 ```
 
-**If RERUN:**
-```markdown
-**Status: 🔴 RERUN**
-The following critical concerns were not adequately addressed in the plan:
+---
 
-| Agent | Unresolved Issue |
-|-------|-----------------|
+### /council output template
+
+Result section: full document. Dedicated Confidence & Limitations section. Architecture decision rationale. All steps shown in full.
+
+```markdown
+# /council: [one-line task summary]
+
+## Result
+**Status: [STATUS emoji + word]**
+
+[If REVIEW:]
+**Cautions noted — proceed with awareness:**
+| Agent / Reviewer | Concern |
+|-----------------|---------|
+| [Name] | [yellow reason] |
+
+### Action Plan
+[Full sequenced action plan table]
+
+### Tradeoffs
+[Full tradeoffs table]
+
+### Open Questions
+[Open questions list]
+
+### Confidence & Limitations
+All agents in this analysis share the same model weights and training data. Consensus across agents reflects consistency, not independence — they can identify different concerns but cannot provide genuinely independent validation.
+
+[If CONSULT domains were identified in Step 2:]
+**Domains requiring professional review:** [list]
+This analysis should inform but not replace qualified professional judgment for these areas.
+
+For high-stakes decisions, treat this analysis as structured preparation for — not a substitute for — expert review.
+
+---
+
+## Analysis
+
+### Step 0 · Context
+[Step 0 output]
+
+### Step 1 · Domains
+[Step 1 output]
+
+### Step 2 · Coverage
+[Step 2 output]
+
+### Step 3 · Agents
+[Step 3 output]
+
+### Step 4 · Agent Analyses
+[Step 4 rendered output — each agent under its own subheading]
+
+### Step 5 · Consolidated Plan
+[Step 5 output]
+
+### Step 6 · Validation
+[Step 6 table + overall status]
+```
+
+---
+
+### Status-specific Result content
+
+These slots apply within the tier templates above.
+
+**If PASS:** Render the action plan and epistemic caveat only. No additional notes needed.
+
+**If REVIEW:** Add the caution table before the action plan (as shown in the templates). Plan is sound; proceed with awareness of flagged items.
+
+**If RERUN:** Replace the action plan with:
+
+```markdown
+## Result
+**Status: 🔴 RERUN**
+
+The following critical concerns were not adequately addressed. Resolve before executing:
+
+| Agent / Reviewer | Unresolved Issue |
+|-----------------|-----------------|
 | [Name] | [red reason] |
 
-Before re-running, resolve:
-- [ ] [Specific action addressing red concern 1]
-- [ ] [Specific action addressing red concern 2]
+Resolve:
+- [ ] [Specific action addressing concern 1]
+- [ ] [Specific action addressing concern 2]
 
-Suggested re-run:
-Tier: [same tier if concerns are targeted — escalate to `/council` if multiple red flags or systemic issues]
-Add to your prompt: "[Draft the additional context or constraint that addresses the flagged concerns]"
+**Re-run (RERUN-DELTA — only deficient domains + adversarial):**
+Tier: [same tier, or escalate to `/council` if multiple red flags or systemic issues]
+Re-run scope: agents covering [list of deficient domains] + adversarial agent
+Prompt addition: "[specific context or constraint to add]"
 ```
 
-**If RESCOPE:**
+**If RESCOPE:** Replace the action plan with:
+
 ```markdown
+## Result
 **Status: 🔴 RESCOPE**
-The consolidated plan introduced material new scope that was not in the original request. The following agents' prior analyses are incomplete as a result and cannot be patched:
 
-| Agent | New Scope Identified |
-|-------|---------------------|
-| [Name] | [scope_change reason] |
+The consolidated plan introduced scope not present in the original request. Prior analyses are incomplete for the expanded scope — do not patch.
 
-Do not attempt to patch the current plan. Re-run the full pipeline with the expanded scope included in the original prompt:
+| Agent / Reviewer | Scope Change Identified |
+|-----------------|------------------------|
+| [Name] | [what new scope appeared and why it invalidates prior analysis] |
 
-Suggested re-run:
-Tier: [same tier or escalate if the expanded scope increases complexity]
-Revised prompt: "[Restate the original request with the new scope explicitly included]"
+Use the revised prompt below for a full pipeline re-run:
+
+---
+[COMPLETE REVISED PROMPT — drafted in full by the orchestrator, incorporating both the original request and the new scope, ready to paste as-is]
+---
+
+Tier: [same tier or escalate if expanded scope increases complexity]
 ```
+
+---
 
 This pipeline produces analysis only.
