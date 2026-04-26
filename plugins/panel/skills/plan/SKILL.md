@@ -111,7 +111,7 @@ The Naive Plan Reviewer (Track A) checks whether the phases cover everything in 
 The scope-only domain agents (Track B) check whether phasing introduced scope beyond the spec.
 The sighted adversarial agent (Track C) checks whether the phase ordering is sound and task independence assumptions hold.
 
-Use the same rating definitions and overall status (PASS / REVIEW / RERUN / RESCOPE) from the shared pipeline.
+Use the same rating definitions and overall status (🟢 Green / 🟡 Yellow / 🔴 Red) from the shared pipeline.
 
 ---
 
@@ -119,15 +119,15 @@ Use the same rating definitions and overall status (PASS / REVIEW / RERUN / RESC
 
 **Result-first.** Phased plan before analysis detail.
 
-**If PASS or REVIEW:**
+**If 🟢 Green or 🟡 Yellow:**
 
 ```markdown
 # /plan: [one-line description of what is being planned]
 
 ## Result
-**Status: ✅ PASS** (or ⚠️ REVIEW)
+**Status: 🟢 Green** (or 🟡 Yellow)
 
-[If REVIEW:]
+[If 🟡 Yellow:]
 **Cautions — proceed with awareness:**
 | Source | Concern |
 |--------|---------|
@@ -163,11 +163,11 @@ Use the same rating definitions and overall status (PASS / REVIEW / RERUN / RESC
 [Step 6 table + overall status]
 ```
 
-**If RERUN:**
+**If 🔴 Red:**
 
 ```markdown
 ## Result
-**Status: 🔴 RERUN**
+**Status: 🔴 Red**
 
 The following concerns prevent a reliable phase plan from being produced:
 
@@ -182,11 +182,11 @@ Re-run scope: domains [list] + adversarial agent
 Prompt addition: "[additional context needed]"
 ```
 
-**If RESCOPE:**
+**If 🔴 Red (scope_drift):**
 
 ```markdown
 ## Result
-**Status: 🔴 RESCOPE**
+**Status: 🔴 Red (scope_drift)**
 
 The plan revealed scope beyond the provided spec. Re-run with:
 

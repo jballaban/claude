@@ -1,0 +1,18 @@
+{
+  "name": "plan",
+  "version": "1.0.0",
+  "description": "Spec → phased implementation plan. Runs the panel pipeline to identify domain work items and dependencies, then synthesizes a dependency-ordered phase structure. Phases are sequential; tasks within each phase are parallelizable.",
+  "tier": "standard",
+  "trigger": "explicit",
+  "entry": "SKILL.md",
+  "files": ["SKILL.md", "../shared/pipeline.md", "../shared/agents-catalog.md", "../shared/agent-teams.md"],
+  "tags": ["planning", "implementation", "phases", "dependencies", "multi-agent"],
+  "models": {
+    "orchestrator": "claude-sonnet-4-6",
+    "subagents": "claude-haiku-4-5-20251001"
+  },
+  "effort": {
+    "orchestrator": "high",
+    "subagents": "medium"
+  }
+}

@@ -1,11 +1,11 @@
 {
   "name": "ask",
   "version": "1.0.0",
-  "description": "Shallow-tier triage. Identifies top 3 domains, synthesizes 1–3 dynamic agents on demand, runs parallel analysis, consolidates, and validates with traffic-light ratings. Returns all steps and a verdict.",
+  "description": "Shallow-tier triage. Tiers top 3 domains, synthesizes demand-driven agents (up to 3), runs parallel analysis, consolidates with tier-weighted scoring, adversarial review, agent team deliberation, and traffic-light rating. Returns all steps and a verdict.",
   "tier": "shallow",
   "trigger": "explicit",
   "entry": "SKILL.md",
-  "files": ["SKILL.md", "../shared/pipeline.md", "../shared/agents-catalog.md"],
+  "files": ["SKILL.md", "../shared/pipeline.md", "../shared/agents-catalog.md", "../shared/agent-teams.md"],
   "agent_source": "https://github.com/VoltAgent/awesome-claude-code-subagents",
   "tags": ["triage", "quick", "ask", "multi-agent"],
   "models": {

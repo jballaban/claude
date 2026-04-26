@@ -19,10 +19,14 @@ plugins/panel/
 │   │   └── evaluations.md          # Test scenarios for this tier
 │   ├── panel/
 │   ├── council/
+│   ├── plan/                       # Spec → phased implementation plan
 │   ├── version/
+│   ├── analyze-domains/            # Internal utility — domain tiering subagent
+│   ├── assemble-agents/            # Internal utility — agent roster synthesis subagent
 │   └── shared/
 │       ├── pipeline.md             # The shared orchestration algorithm
-│       └── agents-catalog.md       # Expert domain library for agent synthesis
+│       ├── agents-catalog.md       # Expert domain library for agent synthesis
+│       └── agent-teams.md          # Reference: agent teams feature documentation
 ├── README.md                       # User-facing docs
 └── README.dev.md                   # This file
 
@@ -75,9 +79,25 @@ To bump minor or major, edit `plugin.json` manually before committing.
 
 1. Create `plugins/panel/skills/<name>/SKILL.md`
 2. Create `plugins/panel/skills/<name>/manifest.json` — copy from an existing skill, update fields
-3. Create `plugins/panel/skills/<name>/evaluations.md` — at least 2–3 test scenarios
-4. Add the skill directory name to `.gitignore` under the derived skill installs block
+3. Create `plugins/panel/skills/<name>/evaluations.md` — at least 2–3 test scenarios (user-facing skills only; utility skills like `analyze-domains`/`assemble-agents` can skip this)
+4. Add `.claude/skills/<name>/` to `.gitignore` under the derived skill installs block
 5. Run `/reload-skills` — the new skill is auto-discovered
+
+---
+
+## Enabling agent teams
+
+The validation round (Step 6B) uses [agent teams](https://code.claude.com/docs/en/agent-teams), which requires Claude Code v2.1.32+ and this setting in your `settings.json`:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+Without this, Step 6B falls back to parallel subagents — domain agents cannot communicate directly.
 
 ---
 
@@ -88,10 +108,12 @@ All three tiers (`/ask`, `/panel`, `/council`) share the algorithm in `plugins/p
 | Parameter | ask | panel | council |
 |-----------|-----|-------|---------|
 | `DOMAIN_COUNT` | 3 | 5 | 5 |
-| `AGENT_MIN` | 1 | 3 | 7 |
 | `AGENT_MAX` | 3 | 7 | 10 |
+| `TIER_NAME` | ask | panel | council |
 | Orchestrator effort | medium | high | xhigh |
 | Subagent effort | low | medium | high |
+
+Agent count is **demand-driven**: `analyze-domains` tiers domains into Critical/Important/Adjacent, `assemble-agents` calculates natural demand from tier weights (Critical=1.0, Important=0.5, Adjacent=0.25), then caps at `AGENT_MAX`. No minimum.
 
 ---
 

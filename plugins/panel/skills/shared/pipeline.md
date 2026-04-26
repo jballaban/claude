@@ -123,7 +123,7 @@ Ambiguities:
 
 Read [agents-catalog.md](agents-catalog.md), then spawn the `assemble-agents` skill as a **Sonnet subagent**, passing:
 - The tiered domain list from Step 1
-- `AGENT_MIN` and `AGENT_MAX` from tier parameters
+- `AGENT_MAX` from tier parameters
 - The original request (for agent naming and focus)
 - The full catalog content just read
 
@@ -544,7 +544,7 @@ If `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is not set, run Phase B as parallel su
 
 Present the run **result-first**: the Result section appears at the top before the analysis detail. Use the tier-specific template for the Result section, then render all steps (0–6) after the `---` divider.
 
-**The Result section is always the first thing the user sees.** Status, plan, and caveats come before agent analyses. This applies to all four status paths (PASS, REVIEW, RERUN, RESCOPE).
+**The Result section is always the first thing the user sees.** Status, plan, and caveats come before agent analyses. This applies to all three status paths (🟢 Green, 🟡 Yellow, 🔴 Red).
 
 ---
 

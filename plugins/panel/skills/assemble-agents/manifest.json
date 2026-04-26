@@ -1,0 +1,16 @@
+{
+  "name": "assemble-agents",
+  "version": "1.0.0",
+  "description": "Internal utility. Takes a tiered domain list and AGENT_MAX, maps domains to the agent catalog, applies tier-weighted budget allocation, and synthesizes a full agent roster with composed directives. Called by the pipeline orchestrator in Steps 2–3 — not intended for direct user invocation.",
+  "tier": "utility",
+  "trigger": "internal",
+  "entry": "SKILL.md",
+  "files": ["SKILL.md", "../shared/agents-catalog.md"],
+  "tags": ["utility", "agents", "internal"],
+  "models": {
+    "orchestrator": "claude-sonnet-4-6"
+  },
+  "effort": {
+    "orchestrator": "medium"
+  }
+}

@@ -1,11 +1,11 @@
 {
   "name": "council",
   "version": "1.0.0",
-  "description": "Deep-tier exhaustive analysis. Identifies top 5 domains, synthesizes 7–10 granular dynamic agents on demand, runs parallel analysis with long-horizon prompting, consolidates with risk matrix, and validates with traffic-light ratings. Returns all steps and a status.",
+  "description": "Deep-tier exhaustive analysis. Tiers top 5 domains, synthesizes demand-driven agents (up to 10), runs parallel analysis with long-horizon prompting, consolidates with tier-weighted scoring, adversarial review, agent team deliberation, and traffic-light rating. Returns all steps and a status.",
   "tier": "deep",
   "trigger": "explicit",
   "entry": "SKILL.md",
-  "files": ["SKILL.md", "../shared/pipeline.md", "../shared/agents-catalog.md"],
+  "files": ["SKILL.md", "../shared/pipeline.md", "../shared/agents-catalog.md", "../shared/agent-teams.md"],
   "agent_source": "https://github.com/VoltAgent/awesome-claude-code-subagents",
   "tags": ["architecture", "deep-analysis", "multi-agent", "risk", "council"],
   "models": {
