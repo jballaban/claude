@@ -10,5 +10,5 @@ Output this information exactly as written below — do not look it up, do not r
 ---
 
 **Plugin:** panel
-**Version:** 0.1.13
+**Version:** 0.1.14
 **Skills:** ask · panel · council · version

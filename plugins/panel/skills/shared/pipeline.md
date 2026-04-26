@@ -21,7 +21,7 @@ Shared algorithm for `/ask`, `/panel`, and `/council`. Each skill defines its ti
 
 Injected by the calling skill:
 - `DOMAIN_COUNT` — how many top domains to identify
-- `AGENT_MIN` / `AGENT_MAX` — domain agent count range (the adversarial agent is always additional)
+- `AGENT_MAX` — maximum domain agents (the adversarial agent is always additional and does not count against this)
 - `TIER_NAME` — ask | panel | council
 - `DEPTH_INSTRUCTION` — per-tier instruction injected into every domain agent prompt
 

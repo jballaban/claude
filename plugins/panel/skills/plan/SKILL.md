@@ -16,7 +16,6 @@ description: Takes a spec and produces a phased implementation plan with indepen
 | Parameter | Value |
 |-----------|-------|
 | `DOMAIN_COUNT` | 5 |
-| `AGENT_MIN` | 3 |
 | `AGENT_MAX` | 7 |
 | `TIER_NAME` | plan |
 | `DEPTH_INSTRUCTION` | Analyze the spec to identify every concrete work item your domain would own in implementing it. Classify each item as: **foundational** (other work depends on it existing first), **core** (primary deliverable), or **hardening** (polish, edge cases, production-readiness). Note any dependencies between items — if item B requires item A to exist first, say so explicitly. Size each item as roughly one developer's work item (a single PR, a day or two of focused work). Do not write code or create files — identify and classify work only. |

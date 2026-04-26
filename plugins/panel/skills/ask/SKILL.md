@@ -15,12 +15,11 @@ description: Quick multi-domain triage of a task. Identifies the top 3 relevant 
 | Parameter | Value |
 |-----------|-------|
 | `DOMAIN_COUNT` | 3 |
-| `AGENT_MIN` | 1 |
 | `AGENT_MAX` | 3 |
 | `TIER_NAME` | ask |
 | `DEPTH_INSTRUCTION` | Be concise. Identify only the most significant concerns — 3 items per field maximum. Skip anything minor. Prioritise blockers and critical risks over everything else. |
 
-At this tier, consolidate aggressively. 3 domains should map to 1–3 agents by blending closely related concerns into a single agent.
+At this tier, consolidate aggressively. Blend closely related concerns into single agents — the domain count drives agent count, up to 3.
 
 ---
 

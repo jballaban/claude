@@ -15,12 +15,11 @@ description: Deep exhaustive analysis for high-stakes tasks. Identifies the top 
 | Parameter | Value |
 |-----------|-------|
 | `DOMAIN_COUNT` | 5 |
-| `AGENT_MIN` | 7 |
 | `AGENT_MAX` | 10 |
 | `TIER_NAME` | council |
 | `DEPTH_INSTRUCTION` | Be exhaustive. Consider edge cases, failure modes, long-term implications over a 6–12 month horizon, team and process impact, and compounding risks. Surface anything that could cause problems now or later — do not self-filter. |
 
-At this tier, be granular. 5 domains should expand into 7–10 agents by breaking each domain into its distinct sub-concerns. A "security" domain might produce a "Threat Modelling Specialist" and a "Compliance & Audit Specialist" as separate agents.
+At this tier, be granular. Break each domain into its distinct sub-concerns rather than blending — a "Security" domain might produce a "Threat Modelling Specialist" and a "Compliance & Audit Specialist" as separate agents. Agent count is demand-driven, up to 10.
 
 ---
 

@@ -37,31 +37,33 @@ For each input domain, identify the closest catalog expertise from the provided 
 
 ## Step 2 · Budget Allocation
 
-Apply tier weights to determine how many agents each tier deserves within the target count:
+Agent count is **demand-driven**: figure out how many agents the domains actually require, then cap at `AGENT_MAX`. Never pad to reach a minimum.
+
+Apply tier weights to calculate natural demand:
 
 | Tier | Weight per domain |
 |------|------------------|
-| Critical | 1.0 |
-| Important | 0.5 |
-| Adjacent | 0.25 |
+| Critical | 1.0 — one agent slot per domain (blending allowed if closely related) |
+| Important | 0.5 — one agent slot per two domains (round up) |
+| Adjacent | 0.25 — one agent slot per four domains (round down) |
 
 If domains are untiered (no categorization provided), assign weight 1.0 to all.
 
 **Calculation:**
 ```
-total_weight    = (n_critical × 1.0) + (n_important × 0.5) + (n_adjacent × 0.25)
-target          = midpoint of AGENT_MIN–AGENT_MAX (round to nearest integer)
+critical_agents  = n_critical  (minimum; blend related Critical domains if > AGENT_MAX)
+important_agents = ceil(n_important × 0.5)
+adjacent_agents  = floor(n_adjacent × 0.25)
 
-critical_agents  = round((n_critical  × 1.0) / total_weight × target)
-important_agents = round((n_important × 0.5) / total_weight × target)
-adjacent_agents  = target − critical_agents − important_agents
+natural_count = critical_agents + important_agents + adjacent_agents
+actual_count  = min(natural_count, AGENT_MAX)
 ```
 
-Round to integers; if rounding doesn't sum to target, adjust the largest group ±1.
+If `actual_count` < `natural_count`, trim from the bottom up: drop Adjacent first, then blend Important domains, never drop or merge Critical.
 
 **Hard constraints:**
-1. **All Critical domains must be represented.** If `critical_agents` < number of Critical domains, blend closely related Critical domains into shared agents. Never drop a Critical domain.
-2. **Adjacent agents are optional.** If `adjacent_agents` rounds to 0 or the budget after Critical and Important is exhausted, drop Adjacent domains — list them in `adjacent_dropped`.
+1. **All Critical domains must be represented.** Blend closely related Critical domains into shared agents only when Critical domain count exceeds `AGENT_MAX`. Never drop a Critical domain.
+2. **Adjacent agents are optional.** Drop them first when trimming to fit `AGENT_MAX`. List any dropped domains in `adjacent_dropped`.
 
 ---
 
@@ -100,7 +102,9 @@ Return the full assembly inside `<agent_roster>` tags as JSON, then render as re
     }
   ],
   "budget": {
-    "target_agents": "[integer — midpoint of AGENT_MIN–AGENT_MAX]",
+    "natural_count": "[integer — agents demanded by domain count and tier weights]",
+    "actual_count": "[integer — min(natural_count, AGENT_MAX)]",
+    "agent_max": "[AGENT_MAX from input]",
     "critical_agents": "[integer]",
     "important_agents": "[integer]",
     "adjacent_agents": "[integer]",
@@ -137,10 +141,10 @@ Then render as readable markdown:
 | [domain] | Critical | [concepts] | Covered | STANDARD |
 
 ### Budget
-- Target: [N] agents ([AGENT_MIN]–[AGENT_MAX] range)
+- Demand: [natural_count] agents needed · Cap: [AGENT_MAX] · Actual: [actual_count]
 - Critical: [N] agents covering [N] domains
 - Important: [N] agents covering [N] domains
-- Adjacent: [N] agents covering [N] domains _(or: dropped — budget exhausted)_
+- Adjacent: [N] agents covering [N] domains _(or: dropped — cap reached)_
 
 ### Agent Roster
 | Agent | Expertise Blend | Covers | Focus |
@@ -166,7 +170,6 @@ Then render as readable markdown:
 </domains>
 
 <agent_count>
-AGENT_MIN: [MIN]
 AGENT_MAX: [MAX]
 </agent_count>
 

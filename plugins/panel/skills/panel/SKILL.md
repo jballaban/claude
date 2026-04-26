@@ -15,12 +15,11 @@ description: Standard multi-domain analysis of a task. Identifies the top 5 rele
 | Parameter | Value |
 |-----------|-------|
 | `DOMAIN_COUNT` | 5 |
-| `AGENT_MIN` | 3 |
 | `AGENT_MAX` | 7 |
 | `TIER_NAME` | panel |
 | `DEPTH_INSTRUCTION` | Be thorough and specific. Cover all meaningful concerns in your domain. Provide actionable recommendations. Don't pad — if a field has nothing worth saying, omit it. |
 
-At this tier, balance consolidation with coverage. Closely related concerns can share an agent, but distinct domains should have dedicated representation.
+At this tier, balance consolidation with coverage. Closely related concerns can share an agent, but distinct domains should have dedicated representation. Agent count is demand-driven, up to 7.
 
 ---
 
