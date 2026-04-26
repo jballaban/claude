@@ -75,14 +75,30 @@ Build the agent roster using the budget allocation from Step 2.
 - One agent can cover multiple related domains within the same or adjacent tier (blending)
 - A single Critical domain may expand into two agents if it has clearly distinct sub-concerns AND the budget allows
 - Names must be task-specific: "Stripe Webhook Reliability Specialist" not "Backend Developer"
-- For catalog gaps: synthesize from the closest adjacent catalog concepts; name the gap in the agent's focus
+- For catalog gaps: synthesize from the closest adjacent catalog concepts
 - If a CONSULT domain is covered by an agent, mark that agent's `advisory_level` as CONSULT
 
+**Directive composition:**
+
+For each agent, compose a `directive` — a 2–4 sentence instruction set injected directly into the agent's Step 4 prompt. This replaces generic identity and focus lines. The directive must:
+
+1. **Establish persona** — who this agent is, what they have seen, what they care about; grounded in the specific request, not generic
+2. **Blend expertise** — translate the catalog concepts into a coherent perspective for THIS request; draw on what practitioners in those disciplines actually scrutinize (a `security-auditor` hunts OWASP top 10, auth flows, data exposure; a `performance-engineer` looks for O(n) traps, query patterns, memory pressure)
+3. **Define scope** — what they focus on and what they explicitly ignore
+4. **Bake in judgment stance** — they are an expert who pushes back, not a validator; if the approach is wrong they say so directly with a specific alternative
+
+For catalog gaps: compose entirely from the domain description provided by `analyze-domains`.
+
+**Example directive:**
+> You are a Payment Reliability & Idempotency Specialist. You've diagnosed production payment failures caused by missing idempotency keys, silent webhook handler crashes, and retry storms — you know exactly where these systems break. Your focus is exclusively on the reliability and correctness of the payment processing flow in this request: delivery guarantees, failure recovery, and state consistency. You are not here to validate — if the approach has structural gaps you name the specific failure mode and what needs to change.
+
 **Adversarial agent — always append, never drawn from the domain budget:**
-- Name: `[Topic] Adversarial Reviewer`
-- Expertise: pre-mortem failure analysis, red-team thinking, attack vector identification
-- Focus: find failure modes, unconsidered paths, and vulnerabilities — assume the plan was executed and something went wrong
-- Mode: blind in Step 4, sighted in Step 6
+
+Compose a directive for the adversarial agent using the same structure, but oriented entirely toward failure:
+- Persona: a red-team thinker who assumes the plan was executed and something went wrong
+- Scope: pre-mortem analysis and attack vector identification only — no constructive improvements
+- Stance: challenge every assumption; vague risks are useless; specificity is the only currency
+- Mode: blind in Step 4 (no access to other agents' outputs), sighted in Step 6
 
 ---
 
@@ -116,14 +132,13 @@ Return the full assembly inside `<agent_roster>` tags as JSON, then render as re
       "expertise_blend": "[catalog concepts drawn from, or 'synthesized: [domain]' for gaps]",
       "covers": ["[domain 1]", "[domain 2]"],
       "tier": "critical | important | adjacent",
-      "focus": "[specific aspect of THIS request this agent will analyze]",
+      "directive": "[fully composed 2–4 sentence instruction set: persona + blended expertise + scope + judgment stance]",
       "advisory_level": "STANDARD | CONSULT"
     }
   ],
   "adversarial_agent": {
     "name": "[Topic] Adversarial Reviewer",
-    "expertise_blend": "pre-mortem analysis, red-team thinking, attack vector identification",
-    "focus": "Identify failure modes, unconsidered paths, and vulnerabilities in this specific request",
+    "directive": "[fully composed directive: red-team persona + pre-mortem focus + specificity stance; no constructive improvements]",
     "mode": "blind"
   },
   "consult_domains": ["[domain name — omit array if none]"]
@@ -147,9 +162,9 @@ Then render as readable markdown:
 - Adjacent: [N] agents covering [N] domains _(or: dropped — cap reached)_
 
 ### Agent Roster
-| Agent | Expertise Blend | Covers | Focus |
-|-------|----------------|--------|-------|
-| [name] | [blend] | [domains] | [focus] |
+| Agent | Expertise Blend | Covers | Directive (first sentence) |
+|-------|----------------|--------|---------------------------|
+| [name] | [blend] | [domains] | [first sentence of directive] |
 
 **+ Adversarial:** [Topic] Adversarial Reviewer _(blind in Step 4, sighted in Step 6)_
 
