@@ -153,7 +153,9 @@ Render both parts of the `assemble-agents` output under separate labels in the S
 
 ## Step 4 · Parallel Agent Analysis
 
-Spawn all domain agents **and the adversarial agent simultaneously** (see orchestrator instructions). Wait for all responses before proceeding.
+Spawn all **domain agents simultaneously** (see orchestrator instructions). Do NOT spawn the adversarial agent here — it runs in Step 6A with full visibility of the consolidated response.
+
+Wait for all domain agent responses before proceeding.
 
 If an agent returns malformed output or fails: note the failure in Step 4 output, mark that domain as "unanalyzed", flag the coverage gap in Step 5, and continue. A single agent failure must not block the pipeline.
 
@@ -218,44 +220,6 @@ Omit any priority level your domain has nothing to contribute to. `assumptions` 
       "point": "Worth doing if time allows — low impact if deferred"
     }
   ]
-}
-</agent_analysis>
-```
-
-### Adversarial agent prompt (blind phase)
-
-Use this distinct prompt for the adversarial agent in Step 4:
-
-```
-<project_context>
-[STEP_0_CONTEXT_SUMMARY]
-</project_context>
-
-<request>
-[ORIGINAL_REQUEST]
-</request>
-
-[DIRECTIVE — the fully composed adversarial directive from the assemble-agents roster]
-
-**Do NOT write any code, create any files, or take any action. Return only the <agent_analysis> JSON block below.**
-
-Return a JSON block inside <agent_analysis> tags using the adversarial schema below — NOT the standard domain agent schema.
-
-<agent_analysis>
-{
-  "agent": "[TOPIC] Adversarial Reviewer",
-  "mode": "blind",
-  "attack_vectors": [
-    {
-      "severity": "critical | important",
-      "vector": "Specific failure mode, vulnerability, or path to a bad outcome"
-    }
-  ],
-  "steelman_defense": [
-    "The strongest argument in favor of this approach that you must acknowledge honestly"
-  ],
-  "verdict": "fatal | severe | manageable | sound",
-  "verdict_reason": "One sentence: what makes this approach fundamentally strong or weak?"
 }
 </agent_analysis>
 ```
@@ -362,18 +326,7 @@ For domain agents:
 - `[type]` [point]
 ```
 
-For the adversarial agent:
-```markdown
-### [Topic] Adversarial Reviewer _(blind)_
-
-**Attack Vectors:**
-- `[severity]` [vector]
-
-**Steelman Defense:**
-- [point]
-
-**Verdict:** [fatal | severe | manageable | sound] — [verdict_reason]
-```
+_(The adversarial agent does not appear in Step 4 rendering — it runs in Step 6A.)_
 
 ---
 
@@ -381,14 +334,28 @@ For the adversarial agent:
 
 Merge all domain agent outputs into a **consolidated answer** to the original question. The output shape follows the nature of the question — not a fixed format imposed regardless of what was asked.
 
+**Dual weighting:** Apply a combined weight to each item when merging:
+
+| | Critical item | Important item | Nice-to-have item |
+|--|--------------|---------------|------------------|
+| **Critical domain agent** | 9 | 6 | 3 |
+| **Important domain agent** | 6 | 4 | 2 |
+| **Adjacent domain agent** | 3 | 2 | 1 |
+
+Higher weight = higher precedence. When agents disagree:
+- Clearly unequal weights → use the higher-weight position; note the dissent
+- Equal or near-equal weights on a critical item → preserve as an explicit tradeoff; do not silently resolve
+
 **Consolidation rules:**
-1. **Answer the question directly**: Lead with what the panel concludes, recommends, or decides. This is the primary output.
+1. **Answer the question directly**: Lead with what the panel concludes, recommends, or decides.
 2. **Deduplicate across agents**: Merge identical or near-identical concerns; note all source agents.
-3. **Preserve disagreements as tradeoffs**: Where agents assign different priorities or recommend different approaches, surface both as a tradeoff — do not silently resolve.
-4. **Separate risks from decisions**: Risks that require awareness belong in their own section, not buried in the main answer.
-5. **Flag unresolved questions**: Decisions or unknowns that could materially change the answer belong in Open Questions.
-6. **Verify coverage**: Confirm every Step 1 domain is represented; flag any gaps.
-7. **Integrate adversarial findings**: Fold the adversarial agent's attack vectors into the Risks section or the main answer where they affect the recommendation.
+3. **Weight-order the findings**: Higher-weight items appear first within each section.
+4. **Preserve disagreements as tradeoffs**: Near-equal weight conflicts on critical items surface as explicit tradeoffs.
+5. **Separate risks from decisions**: Risks belong in their own section, not buried in the main answer.
+6. **Flag unresolved questions**: Decisions or unknowns that could materially change the answer belong in Open Questions.
+7. **Verify coverage**: Confirm every Step 1 domain is represented; flag any gaps.
+
+_Note: adversarial review happens in Step 6A after this consolidation — do not attempt to anticipate it here._
 
 **Output — Step 5:**
 
@@ -421,153 +388,155 @@ _If any CONSULT-level domain was identified in Step 2, inject this advisory note
 
 ---
 
-## Step 6 · Validation Round
+## Step 6 · Adversarial Review + Team Deliberation
 
-Run three validation tracks **simultaneously**. Wait for all responses before proceeding.
+Two sequential phases. Phase A must complete before Phase B begins.
 
-### Track A — Naive Plan Reviewer
+---
 
-A fresh-prompt subagent with **no access to Step 4 agent analyses**. Checks whether the plan achieves the original request from an independent perspective.
+### Phase A · Adversarial Review
+
+Spawn the adversarial agent from the roster as a **single subagent**. It receives only the original request and the consolidated response — it does not see individual domain agent analyses.
 
 ```
+<project_context>
+[STEP_0_CONTEXT_SUMMARY]
+</project_context>
+
 <request>
 [ORIGINAL_REQUEST]
 </request>
 
-<plan>
+<consolidated_response>
 [STEP_5_OUTPUT]
-</plan>
+</consolidated_response>
 
-You are reviewing a plan produced by a multi-agent analysis system. You have NOT seen the agents' analyses — only the original request and the final plan.
+[DIRECTIVE — the adversarial directive from the assemble-agents roster]
 
-**Do NOT write any code, create any files, or take any action. Return only the <validation> JSON block below.**
+**Do NOT write any code, create any files, or take any action. Return only the <adversarial_review> JSON block below.**
 
-Evaluate: Does this plan actually achieve what was requested? Is anything the user asked for missing? Is anything in the plan disconnected from the request?
+Challenge the consolidated response against the original request:
+1. Does it actually address what was asked, or has it drifted?
+2. What failure modes, risks, or gaps does it fail to surface or downplay?
+3. What did consolidation distort, soften, or lose?
+4. If this response were acted on as-is, what would go wrong?
 
-Return a JSON block inside <validation> tags:
-
-<validation>
-{
-  "reviewer": "Naive Plan Reviewer",
-  "gaps": ["Things the user asked for that the plan does not address — omit if none"],
-  "additions": ["Things in the plan not connected to the request — omit if none"],
-  "rating": "green | yellow | red",
-  "type": "deficiency | scope_change",
-  "reason": "Required if yellow or red — name the specific gap or addition"
-}
-</validation>
-
-Omit `gaps`, `additions`, and `type` if none.
-```
-
-### Track B — Scope-only domain agents
-
-Original Step 4 domain agents re-prompted to check scope change only. The intent check from the old Step 6 is replaced by the Naive Plan Reviewer — domain agents no longer re-validate their own intent.
-
-```
-<request>
-[ORIGINAL_REQUEST]
-</request>
-
-<consolidated_plan>
-[STEP_5_OUTPUT]
-</consolidated_plan>
-
-You are a [NAME] with expertise in [EXPERTISE_BLEND].
-
-**Do NOT write any code, create any files, or take any action. Return only the <validation> JSON block below.**
-
-Perform ONE check only:
-
-**Scope check:** Does the consolidated plan introduce material new scope that was not present in the original request? If yes — would that new scope change your domain's analysis significantly enough that your prior analysis is incomplete or wrong?
-
-Return a JSON block inside <validation> tags:
-
-<validation>
-{
-  "agent": "[NAME]",
-  "rating": "green | red",
-  "type": "scope_change",
-  "reason": "Required if red — describe the new scope and why it invalidates your prior analysis"
-}
-</validation>
-
-Rating must be green or red/scope_change only. Omit `type` if green.
-```
-
-### Track C — Sighted adversarial agent
-
-The adversarial agent from Step 4, now with full visibility of all agent analyses and the consolidated plan.
-
-```
-<request>
-[ORIGINAL_REQUEST]
-</request>
-
-<your_blind_analysis>
-[ADVERSARIAL AGENT'S STEP 4 JSON OUTPUT]
-</your_blind_analysis>
-
-<all_agent_analyses>
-[ALL STEP 4 DOMAIN AGENT JSON OUTPUTS]
-</all_agent_analyses>
-
-<consolidated_plan>
-[STEP_5_OUTPUT]
-</consolidated_plan>
-
-You are the [TOPIC] Adversarial Reviewer. In Step 4, you analyzed this request blind. You now have full visibility of all agent analyses and the consolidated plan.
-
-**Do NOT write any code, create any files, or take any action. Return only the <validation> JSON block below.**
-
-Review adversarially:
-1. Were your blind attack vectors addressed in the plan, dismissed, or ignored?
-2. Do you see new failure modes now that you can see the full picture?
-3. Does the plan's sequencing introduce risk (wrong ordering, missing prerequisites)?
-4. Were critical concerns from other agents lost or distorted in consolidation?
-
-Return a JSON block inside <validation> tags:
-
-<validation>
+<adversarial_review>
 {
   "agent": "[TOPIC] Adversarial Reviewer",
-  "mode": "sighted",
-  "unresolved_vectors": ["Vectors from blind analysis not addressed by the plan — omit if none"],
-  "new_vectors": ["New failure modes visible after seeing the full picture — omit if none"],
-  "consolidation_distortions": ["Concerns present in agents but lost or undermined in consolidation — omit if none"],
-  "rating": "green | yellow | red",
-  "type": "deficiency | scope_change",
-  "reason": "Required if yellow or red"
+  "unaddressed_gaps": ["Things the original request needed that the consolidated response misses — omit if none"],
+  "consolidation_failures": ["Where consolidation distorted, softened, or lost important concerns — omit if none"],
+  "attack_vectors": ["Failure modes or risks not adequately captured — omit if none"],
+  "verdict": "fatal | severe | manageable | sound",
+  "verdict_reason": "One sentence: what makes the consolidated response fundamentally sound or flawed?"
 }
-</validation>
-
-Omit `type` if green.
+</adversarial_review>
 ```
 
-**Rating definitions:**
-- 🟢 **Green** — no material gaps, scope changes, or unaddressed failure modes
-- 🟡 **Yellow** — non-critical gaps, minor distortions, or manageable failure modes not addressed
-- 🔴 **Red (deficiency)** — critical gap, key concern missing or intent undermined, or fatal/severe attack vectors unaddressed
-- 🔴 **Red (scope_change)** — consolidated plan introduced material new scope that invalidates prior analysis
+**Phase A rendering:**
+```markdown
+### Adversarial Review
+**Verdict:** [fatal | severe | manageable | sound] — [verdict_reason]
 
-**Overall status:**
-- All green → **PASS**
-- Any yellow, no red → **REVIEW**
-- Any red (deficiency only) → **RERUN**
-- Any red (scope_change) → **RESCOPE**
+**Unaddressed gaps:** _(omit if none)_
+- [gap]
 
-**RERUN-DELTA:** On RERUN, only re-spawn domain agents whose domains had red deficiencies plus the adversarial agent. Do not re-run all agents when only a subset had issues.
+**Consolidation failures:** _(omit if none)_
+- [failure]
+
+**Attack vectors:** _(omit if none)_
+- [vector]
+```
+
+---
+
+### Phase B · Team Deliberation
+
+Spawn an **agent team** (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` — see fallback below).
+
+**Team composition:**
+- Lead: pipeline orchestrator
+- Teammates: all domain agents from the Step 3 roster only — the adversarial agent does NOT join the team; their Phase A output is provided as context
+
+**What each teammate receives:**
+- Original request and project context
+- The consolidated response from Step 5
+- The adversarial review from Phase A
+- Their own Step 4 analysis
+
+**Team goal:** Fine-tune and validate the consolidated response. Not rebuild from scratch. Teammates deliberate directly with each other via messaging. When alignment is reached (or the team identifies irreconcilable disagreements), each teammate submits a final rating.
+
+**Teammate spawn prompt:**
+```
+<project_context>
+[STEP_0_CONTEXT_SUMMARY]
+</project_context>
+
+<request>
+[ORIGINAL_REQUEST]
+</request>
+
+<consolidated_response>
+[STEP_5_OUTPUT]
+</consolidated_response>
+
+<adversarial_feedback>
+[PHASE_A_OUTPUT]
+</adversarial_feedback>
+
+<your_prior_analysis>
+[THIS AGENT'S STEP 4 JSON OUTPUT]
+</your_prior_analysis>
+
+[DIRECTIVE from assemble-agents roster for this agent]
+
+Your goal is to fine-tune and validate the consolidated response — not rebuild it.
+
+Review whether your prior concerns were addressed. Discuss directly with other teammates where you disagree. Pay particular attention to the adversarial feedback — it identifies gaps and distortions the team should resolve before signing off.
+
+When the team reaches a shared position, submit your final rating to the lead.
+```
+
+**Team output — collected by the lead:**
+
+Each teammate submits:
+```json
+{
+  "agent": "[NAME]",
+  "alignment": "agree | partial | disagree",
+  "amendments": ["Specific changes to the consolidated response the team agreed on — omit if none"],
+  "unresolved": ["Concerns that remain unaddressed — omit if none"]
+}
+```
+
+**Team rating (determined by the lead from teammate submissions):**
+- 🟢 **Green** — all teammates agree or partial with no significant unresolved concerns
+- 🟡 **Yellow** — majority aligned; specific caveats documented; proceed with awareness
+- 🔴 **Red** — significant misalignment; unresolved concerns that materially affect the response
+  - Sub-type `scope_drift`: team flagged that the consolidated response drifted from the original request
 
 **Output — Step 6:**
-```
-| Track | Agent / Reviewer | Rating | Type | Reason |
-|-------|-----------------|--------|------|--------|
-| A — Naive | Naive Plan Reviewer | 🟢 | — | — |
-| B — Scope | [Agent Name] | 🟢 | — | — |
-| C — Adversarial | [Topic] Adversarial Reviewer | 🟡 | deficiency | [reason] |
+```markdown
+### Phase A · Adversarial Review
+[Phase A rendering]
 
-Overall: PASS | REVIEW | RERUN | RESCOPE
+### Phase B · Team Deliberation
+| Teammate | Alignment | Unresolved |
+|----------|-----------|-----------|
+| [Agent Name] | agree / partial / disagree | [concern or —] |
+
+**Amendments agreed:** _(omit if none)_
+- [amendment]
+
+**Team Rating: 🟢 Green / 🟡 Yellow / 🔴 Red**
+[If yellow or red: specific caveats or unresolved concerns]
 ```
+
+---
+
+### Fallback — if agent teams are not enabled
+
+If `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is not set, run Phase B as parallel subagents instead. Each domain agent receives the same inputs as the team spawn prompt above and returns an individual alignment JSON. The orchestrator aggregates: all agree → 🟢, any partial no disagree → 🟡, any disagree → 🔴.
 
 ---
 
@@ -587,7 +556,7 @@ Result section target: ~200 words. Direct answer only — no agent attribution, 
 # /ask: [one-line summary of the question]
 
 ## Result
-**Status: [STATUS emoji + word]**
+**Status: 🟢 Green / 🟡 Yellow / 🔴 Red**
 
 [If REVIEW — one-line caution per concern, inline]
 
@@ -617,8 +586,8 @@ _This analysis reflects a single model's perspective — validate independently 
 ### Step 5 · Consolidated Findings
 [Step 5 output]
 
-### Step 6 · Validation
-[Step 6 table + overall status]
+### Step 6 · Adversarial Review + Team Deliberation
+[Step 6 Phase A adversarial rendering + Phase B team table + team rating]
 ```
 
 ---
@@ -631,7 +600,7 @@ Result section target: ~400–600 words. Full findings with key decisions and tr
 # /panel: [one-line summary of the question]
 
 ## Result
-**Status: [STATUS emoji + word]**
+**Status: 🟢 Green / 🟡 Yellow / 🔴 Red**
 
 [If REVIEW:]
 **Cautions noted — proceed with awareness:**
@@ -675,8 +644,8 @@ Result section target: ~400–600 words. Full findings with key decisions and tr
 ### Step 5 · Consolidated Findings
 [Step 5 output]
 
-### Step 6 · Validation
-[Step 6 table + overall status]
+### Step 6 · Adversarial Review + Team Deliberation
+[Step 6 Phase A adversarial rendering + Phase B team table + team rating]
 ```
 
 ---
@@ -689,7 +658,7 @@ Result section: full document. Dedicated Confidence & Limitations section. All s
 # /council: [one-line summary of the question]
 
 ## Result
-**Status: [STATUS emoji + word]**
+**Status: 🟢 Green / 🟡 Yellow / 🔴 Red**
 
 [If REVIEW:]
 **Cautions noted — proceed with awareness:**
@@ -743,8 +712,8 @@ For high-stakes decisions, treat this analysis as structured preparation for —
 ### Step 5 · Consolidated Findings
 [Step 5 output]
 
-### Step 6 · Validation
-[Step 6 table + overall status]
+### Step 6 · Adversarial Review + Team Deliberation
+[Step 6 Phase A adversarial rendering + Phase B team table + team rating]
 ```
 
 ---
@@ -753,51 +722,46 @@ For high-stakes decisions, treat this analysis as structured preparation for —
 
 These slots apply within the tier templates above.
 
-**If PASS:** Render the findings and epistemic caveat only. No additional notes needed.
+**If 🟢 Green:** Render findings and epistemic caveat only. No additional notes needed.
 
-**If REVIEW:** Add the caution table before the findings (as shown in the templates). Answer is sound; proceed with awareness of flagged items.
-
-**If RERUN:** Replace the action plan with:
+**If 🟡 Yellow:** Add the caveats table before the findings. Answer is sound; proceed with awareness of flagged items.
 
 ```markdown
-## Result
-**Status: 🔴 RERUN**
-
-The following critical concerns prevent a reliable answer from being produced. Resolve before re-running:
-
-| Agent / Reviewer | Unresolved Issue |
-|-----------------|-----------------|
-| [Name] | [red reason] |
-
-Resolve:
-- [ ] [Specific action addressing concern 1]
-- [ ] [Specific action addressing concern 2]
-
-**Re-run (RERUN-DELTA — only deficient domains + adversarial):**
-Tier: [same tier, or escalate to `/council` if multiple red flags or systemic issues]
-Re-run scope: agents covering [list of deficient domains] + adversarial agent
-Prompt addition: "[specific context or constraint to add]"
+**Caveats — proceed with awareness:**
+| Teammate | Concern |
+|----------|---------|
+| [Name] | [unresolved concern] |
 ```
 
-**If RESCOPE:** Replace the action plan with:
+**If 🔴 Red:** Replace the findings with:
 
 ```markdown
 ## Result
-**Status: 🔴 RESCOPE**
+**Status: 🔴 Red**
 
-The consolidated plan introduced scope not present in the original request. Prior analyses are incomplete for the expanded scope — do not patch.
+The team could not align on the consolidated response. The following concerns remain unresolved:
 
-| Agent / Reviewer | Scope Change Identified |
-|-----------------|------------------------|
-| [Name] | [what new scope appeared and why it invalidates prior analysis] |
+| Teammate | Unresolved Concern |
+|----------|--------------------|
+| [Name] | [specific concern] |
 
-Use the revised prompt below for a full pipeline re-run:
+**Adversarial verdict:** [fatal | severe | manageable | sound] — [verdict_reason]
+
+To proceed: resolve the concerns above and re-run, or accept the response with explicit awareness of the unresolved items.
+Tier: [same tier, or escalate to `/council` if systemic issues across multiple domains]
+```
+
+**If 🔴 Red (scope_drift):** The team flagged that the consolidated response drifted from the original request:
+
+```markdown
+## Result
+**Status: 🔴 Red — Scope Drift**
+
+The consolidated response drifted from what was originally asked. Re-run with a clarified prompt:
 
 ---
-[COMPLETE REVISED PROMPT — drafted in full by the orchestrator, incorporating both the original request and the new scope, ready to paste as-is]
+[COMPLETE REVISED PROMPT — drafted in full by the orchestrator, ready to paste as-is]
 ---
-
-Tier: [same tier or escalate if expanded scope increases complexity]
 ```
 
 ---

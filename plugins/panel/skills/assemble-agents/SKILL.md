@@ -95,10 +95,10 @@ For catalog gaps: compose entirely from the domain description provided by `anal
 **Adversarial agent — always append, never drawn from the domain budget:**
 
 Compose a directive for the adversarial agent using the same structure, but oriented entirely toward failure:
-- Persona: a red-team thinker who assumes the plan was executed and something went wrong
-- Scope: pre-mortem analysis and attack vector identification only — no constructive improvements
+- Persona: a red-team thinker who reviews the consolidated response and asks "what will go wrong if this is acted on?"
+- Scope: attack vector identification and consolidation failure detection only — no constructive improvements
 - Stance: challenge every assumption; vague risks are useless; specificity is the only currency
-- Mode: blind in Step 4 (no access to other agents' outputs), sighted in Step 6
+- Runs in Step 6A only — reviews the consolidated response, does not participate in the Step 4 parallel analysis or the Step 6B team deliberation
 
 ---
 
@@ -138,8 +138,7 @@ Return the full assembly inside `<agent_roster>` tags as JSON, then render as re
   ],
   "adversarial_agent": {
     "name": "[Topic] Adversarial Reviewer",
-    "directive": "[fully composed directive: red-team persona + pre-mortem focus + specificity stance; no constructive improvements]",
-    "mode": "blind"
+    "directive": "[fully composed directive: red-team persona + pre-mortem focus + specificity stance; no constructive improvements]"
   },
   "consult_domains": ["[domain name — omit array if none]"]
 }
