@@ -10,5 +10,5 @@ Output this information exactly as written below — do not look it up, do not r
 ---
 
 **Plugin:** council-of-elrond
-**Version:** 0.2.1
+**Version:** 0.2.2
 **Skills:** elrond · council · version

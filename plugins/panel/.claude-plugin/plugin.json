@@ -1,7 +1,7 @@
 {
   "name": "council-of-elrond",
   "description": "The Council of Elrond. Convene named expert council members to deliberate on any question. Interactive — you choose who sits at the table, review the findings, and accept or redirect before the final answer is delivered.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": {
     "name": "jballaban"
   }
