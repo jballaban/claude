@@ -1,19 +1,18 @@
 {
   "name": "council",
   "version": "1.0.0",
-  "description": "Deep-tier exhaustive analysis. Tiers top 5 domains, synthesizes demand-driven agents (up to 10), runs parallel analysis with long-horizon prompting, consolidates with tier-weighted scoring, adversarial review, agent team deliberation, and traffic-light rating. Returns all steps and a status.",
-  "tier": "deep",
+  "description": "The Council of Elrond. Interactive multi-step deliberation: propose and confirm a roster of named experts, parallel analysis, Elrond consolidates, Gandalf reviews, user accepts or redirects, council finalizes with per-member confidence ratings.",
+  "tier": "council",
   "trigger": "explicit",
   "entry": "SKILL.md",
-  "files": ["SKILL.md", "../shared/pipeline.md", "../shared/agents-catalog.md", "../shared/agent-teams.md"],
-  "agent_source": "https://github.com/VoltAgent/awesome-claude-code-subagents",
-  "tags": ["architecture", "deep-analysis", "multi-agent", "risk", "council"],
+  "files": ["SKILL.md", "../shared/roles-catalog.md"],
+  "tags": ["council", "elrond", "multi-agent", "lotr", "interactive"],
   "models": {
     "orchestrator": "claude-opus-4-7",
     "subagents": "claude-sonnet-4-6"
   },
   "effort": {
-    "orchestrator": "xhigh",
-    "subagents": "high"
+    "orchestrator": "high",
+    "subagents": "medium"
   }
 }

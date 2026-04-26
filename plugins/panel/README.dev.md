@@ -1,49 +1,41 @@
-# Panel — Developer Guide
+# Council of Elrond — Developer Guide
 
-This document covers the development workflow for contributors working on the Panel plugin.
+This document covers the development workflow for contributors working on the plugin.
 
 ---
 
 ## Repo structure
 
-This plugin lives inside a monorepo. Paths below are relative to the repo root.
-
 ```
 plugins/panel/
 ├── .claude-plugin/
 │   └── plugin.json                 # Plugin metadata (name, version, author)
-├── skills/                         # Plugin source — what gets published
-│   ├── ask/
-│   │   ├── SKILL.md                # Skill instructions (loaded by Claude Code)
-│   │   ├── manifest.json           # Skill metadata (tier, models, effort, files)
-│   │   └── evaluations.md          # Test scenarios for this tier
-│   ├── panel/
+├── skills/
+│   ├── elrond/
+│   │   ├── SKILL.md                # Gateway skill — Elrond routes to council
+│   │   └── manifest.json
 │   ├── council/
-│   ├── plan/                       # Spec → phased implementation plan
+│   │   ├── SKILL.md                # Main council workflow (8 steps)
+│   │   └── manifest.json
 │   ├── version/
-│   ├── analyze-domains/            # Internal utility — domain tiering subagent
-│   ├── assemble-agents/            # Internal utility — agent roster synthesis subagent
+│   │   ├── SKILL.md                # Version display
+│   │   └── manifest.json
 │   └── shared/
-│       ├── pipeline.md             # The shared orchestration algorithm
-│       ├── agents-catalog.md       # Expert domain library for agent synthesis
-│       └── agent-teams.md          # Reference: agent teams feature documentation
+│       └── roles-catalog.md        # Named role directives (Product Manager, UX Designer, etc.)
 ├── README.md                       # User-facing docs
 └── README.dev.md                   # This file
 
 .claude/skills/reload-skills/       # Dev utility (repo-level, not part of any plugin)
 .hooks/pre-commit                   # Repo-level hook — install once per clone
-reference/                          # Shared reference material across all plugins
 ```
 
-**Key distinction:** `plugins/panel/skills/` is the source of truth. `.claude/skills/` is the local test install — populated by `/reload-skills` and mostly gitignored.
+**Key distinction:** `plugins/panel/skills/` is the source of truth. `.claude/skills/` is the local test install — populated by `/reload-skills` and gitignored.
 
 ---
 
 ## Local development workflow
 
 ### First-time setup
-
-Install the pre-commit hook (run once after cloning):
 
 ```bash
 cp .hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
@@ -52,20 +44,15 @@ cp .hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 ### Edit → Test loop
 
 1. Edit files in `plugins/panel/skills/`
-2. Run `/reload-skills` to sync changes into the local test install
-3. Test with `/ask`, `/panel`, or `/council` in this directory
+2. Run `/reload-skills` to sync into the local test install
+3. Test with `/elrond` or `/council` in this directory
 4. Repeat
-
-`/reload-skills` auto-discovers all plugins under `plugins/*/` — no config needed when adding a new plugin.
-
-> Changes to files in `plugins/panel/skills/` are **not** live until you run `/reload-skills`.
-> Changes to `.claude/skills/` directly are **not** reflected back to `plugins/panel/skills/`.
 
 ---
 
 ## Version management
 
-The pre-commit hook bumps the patch version automatically — but only for plugins that have staged changes in their `plugins/<name>/` directory.
+The pre-commit hook bumps the patch version automatically for any plugin with staged changes.
 
 - Increments patch in `plugins/panel/.claude-plugin/plugin.json`
 - Updates the version string in `plugins/panel/skills/version/SKILL.md`
@@ -75,19 +62,24 @@ To bump minor or major, edit `plugin.json` manually before committing.
 
 ---
 
-## Adding a new skill to this plugin
+## Adding a role to the catalog
+
+Edit `plugins/panel/skills/shared/roles-catalog.md`. Each role is a named section with a directive — a 3–4 sentence instruction covering who the role is, what they instinctively look for, and how they push back. Run `/reload-skills` after editing.
+
+---
+
+## Adding a new skill
 
 1. Create `plugins/panel/skills/<name>/SKILL.md`
-2. Create `plugins/panel/skills/<name>/manifest.json` — copy from an existing skill, update fields
-3. Create `plugins/panel/skills/<name>/evaluations.md` — at least 2–3 test scenarios (user-facing skills only; utility skills like `analyze-domains`/`assemble-agents` can skip this)
-4. Add `.claude/skills/<name>/` to `.gitignore` under the derived skill installs block
-5. Run `/reload-skills` — the new skill is auto-discovered
+2. Create `plugins/panel/skills/<name>/manifest.json`
+3. Add `.claude/skills/<name>/` to `.gitignore`
+4. Run `/reload-skills` — the new skill is auto-discovered
 
 ---
 
 ## Enabling agent teams
 
-The validation round (Step 6B) uses [agent teams](https://code.claude.com/docs/en/agent-teams), which requires Claude Code v2.1.32+ and this setting in your `settings.json`:
+The finalization step (Step 7) uses agent teams if available. Requires Claude Code v2.1.32+ and:
 
 ```json
 {
@@ -97,32 +89,19 @@ The validation round (Step 6B) uses [agent teams](https://code.claude.com/docs/e
 }
 ```
 
-Without this, Step 6B falls back to parallel subagents — domain agents cannot communicate directly.
+Without this, Step 7 falls back to parallel subagents.
 
 ---
 
-## Pipeline architecture
+## Council workflow overview
 
-All three tiers (`/ask`, `/panel`, `/council`) share the algorithm in `plugins/panel/skills/shared/pipeline.md`. Tier parameters in each skill's `SKILL.md` control depth:
-
-| Parameter | ask | panel | council |
-|-----------|-----|-------|---------|
-| `DOMAIN_COUNT` | 3 | 5 | 5 |
-| `AGENT_MAX` | 3 | 7 | 10 |
-| `TIER_NAME` | ask | panel | council |
-| Orchestrator effort | medium | high | xhigh |
-| Subagent effort | low | medium | high |
-
-Agent count is **demand-driven**: `analyze-domains` tiers domains into Critical/Important/Adjacent, `assemble-agents` calculates natural demand from tier weights (Critical=1.0, Important=0.5, Adjacent=0.25), then caps at `AGENT_MAX`. No minimum.
-
----
-
-## Testing
-
-Each skill has `evaluations.md` with pass/fail criteria. Run the scenario, check output against criteria. Re-run evaluations after any change to `pipeline.md` or a skill's `SKILL.md`.
-
----
-
-## What's gitignored
-
-`.claude/skills/` (except `reload-skills/`) is gitignored — it's derived from plugin sources. After cloning, run `/reload-skills` once to populate the test install.
+| Step | What happens |
+|------|-------------|
+| 1 | Elrond proposes a roster → **user confirms** |
+| 2 | Council assembled from roles catalog |
+| 3 | All members analyze in parallel (structured JSON) |
+| 4 | Elrond consolidates — equal weight, severity-ordered |
+| 5 | Gandalf reviews for coherence and drift |
+| 6 | Summary shown to user → **user accepts or redirects** |
+| 7 | Council reconvenes (team or parallel) — confidence ratings |
+| 8 | Final output: answer + confidence table |

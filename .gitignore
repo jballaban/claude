@@ -1,11 +1,7 @@
 # .claude/skills/ is populated by /reload-skills — derived content is not committed.
 # reload-skills/ is the exception: it's the dev utility that bootstraps the test environment.
-.claude/skills/analyze-domains/
-.claude/skills/ask/
-.claude/skills/assemble-agents/
 .claude/skills/council/
-.claude/skills/panel/
-.claude/skills/plan/
+.claude/skills/elrond/
 .claude/skills/shared/
 .claude/skills/version/
 

@@ -1,0 +1,16 @@
+{
+  "name": "elrond",
+  "version": "1.0.0",
+  "description": "Elrond, Lord of Rivendell. Gateway to the Council of Elrond. Speak your need — Elrond will convene the right counsel.",
+  "tier": "gateway",
+  "trigger": "explicit",
+  "entry": "SKILL.md",
+  "files": ["SKILL.md", "../council/SKILL.md", "../shared/roles-catalog.md"],
+  "tags": ["elrond", "gateway", "council", "lotr"],
+  "models": {
+    "orchestrator": "claude-sonnet-4-6"
+  },
+  "effort": {
+    "orchestrator": "medium"
+  }
+}

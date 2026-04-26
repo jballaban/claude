@@ -1,6 +1,6 @@
 ---
 name: version
-description: Displays the current installed version of the panel plugin.
+description: Displays the current installed version of the Council of Elrond plugin.
 ---
 
 # Version
@@ -9,6 +9,6 @@ Output this information exactly as written below — do not look it up, do not r
 
 ---
 
-**Plugin:** panel
-**Version:** 0.1.21
-**Skills:** ask · panel · council · version
+**Plugin:** council-of-elrond
+**Version:** 0.2.1
+**Skills:** elrond · council · version
