@@ -42,19 +42,19 @@ Domain experts analyze the spec from their perspective, identify their work item
 
 ---
 
-## Steps 0–4
+## Steps 0–3
 
-Follow Steps 0–4 exactly as defined in [../shared/pipeline.md](../shared/pipeline.md), with these specifics:
+Follow Steps 0–3 exactly as defined in [../shared/pipeline.md](../shared/pipeline.md), with these specifics:
 
 - The **request** passed to agents is: `"Given the following spec, identify the implementation work items your domain requires and their dependencies: [SPEC]"`
 - Use the `DEPTH_INSTRUCTION` from this skill's tier parameters above (not the shared pipeline's depth instruction)
-- The adversarial agent is always included — it comes from the `assemble-agents` output in Steps 2–3 and does not count against the domain agent budget
+- The adversarial agent is always included — it comes from the `assemble-agents` output in Step 2 and does not count against the domain agent budget
 
 ---
 
 ## Step 5 · Phased Consolidation
 
-Merge all agent outputs into a **phased implementation plan**. This replaces the shared pipeline's Step 5 consolidation.
+Merge all agent outputs into a **phased implementation plan**. This replaces the shared pipeline's Step 4 consolidation.
 
 **Phasing rules:**
 1. Let dependencies determine the number of phases — do not force a fixed count
@@ -105,7 +105,7 @@ _If any CONSULT-level domain was identified in Step 2, inject first:_
 
 ## Step 6 · Validation Round
 
-Run three tracks **simultaneously** using the validation prompts from [../shared/pipeline.md](../shared/pipeline.md) Steps 6–7, substituting `[STEP_5_OUTPUT]` with the phased plan above.
+Run three tracks **simultaneously** using the validation prompts from [../shared/pipeline.md](../shared/pipeline.md) Steps 5–6, substituting `[STEP_5_OUTPUT]` with the phased plan above.
 
 The Naive Plan Reviewer (Track A) checks whether the phases cover everything in the spec.
 The scope-only domain agents (Track B) check whether phasing introduced scope beyond the spec.
@@ -147,23 +147,21 @@ Use the same rating definitions and overall status (🟢 Green / 🟡 Yellow / �
 ### Step 1 · Domains
 [Step 1 output]
 
-### Step 2 · Coverage
+### Step 2 · Agent Assembly
 [Step 2 output]
 
-### Step 3 · Agents
-[Step 3 output]
-
-### Step 4 · Agent Analyses
-[Step 4 rendered output]
+### Step 3 · Agent Analyses
+[Step 3 rendered output]
 
 ### Step 5 · Phased Plan
 [Step 5 output]
 
-### Step 6 · Adversarial Review
-[Step 6 output]
+### Step 6 · Validation
+#### Adversarial Review
+[adversarial review output]
 
-### Step 7 · Team Deliberation
-[Step 7 table + overall status]
+#### Team Deliberation
+[team table + overall status]
 ```
 
 **If 🔴 Red:**

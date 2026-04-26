@@ -8,13 +8,12 @@ Shared algorithm for `/ask`, `/panel`, and `/council`. Each skill defines its ti
 - [Pre-flight: Complexity & Ambiguity Check](#pre-flight--complexity--ambiguity-check)
 - [Step 0: Context Gathering](#step-0--context-gathering)
 - [Step 1: Domain Identification](#step-1--domain-identification)
-- [Step 2: Coverage Check](#step-2--coverage-check)
-- [Step 3: Dynamic Agent Synthesis](#step-3--dynamic-agent-synthesis)
-- [Step 4: Parallel Agent Analysis](#step-4--parallel-agent-analysis)
-- [Step 5: Consolidation](#step-5--consolidation)
-- [Step 6: Adversarial Review](#step-6--adversarial-review)
-- [Step 7: Team Deliberation](#step-7--team-deliberation)
-- [Step 8: Final Output](#step-8--final-output)
+- [Step 2: Agent Assembly](#step-2--agent-assembly)
+- [Step 3: Parallel Agent Analysis](#step-3--parallel-agent-analysis)
+- [Step 4: Consolidation](#step-4--consolidation)
+- [Step 5: Adversarial Review](#step-5--adversarial-review)
+- [Step 6: Team Deliberation](#step-6--team-deliberation)
+- [Step 7: Final Output](#step-7--final-output)
 
 ---
 
@@ -120,7 +119,7 @@ Ambiguities:
 
 ---
 
-## Steps 2–3 · Agent Assembly
+## Step 2 · Agent Assembly
 
 Read [agents-catalog.md](agents-catalog.md), then spawn the `assemble-agents` skill as a **Sonnet subagent**, passing:
 - The tiered domain list from Step 1
@@ -135,30 +134,32 @@ Read [agents-catalog.md](agents-catalog.md), then spawn the `assemble-agents` sk
 
 The subagent always appends one adversarial agent slot to the roster. The adversarial agent does not count against the domain budget — it is always additional.
 
-If `assemble-agents` returns any `consult_domains`, carry the advisory note forward to Step 5 output:
+If `assemble-agents` returns any `consult_domains`, carry the advisory note forward to Step 4 output:
 > **Advisory note:** This analysis includes CONSULT-level domain(s): [list]. Model-generated analysis should not substitute for qualified professional judgment in these areas.
 
-**Output — Steps 2–3:**
+**Output — Step 2:**
 
-Render both parts of the `assemble-agents` output under separate labels in the Step 7 Analysis section:
+Render both parts of the `assemble-agents` output in the Step 7 Analysis section:
 
 ```markdown
-### Step 2 · Coverage
+### Step 2 · Agent Assembly
+
+#### Coverage
 [coverage table from assemble-agents output]
 
-### Step 3 · Agent Roster
+#### Agent Roster
 [agent roster table + adversarial agent line from assemble-agents output]
 ```
 
 ---
 
-## Step 4 · Parallel Agent Analysis
+## Step 3 · Parallel Agent Analysis
 
 Spawn all **domain agents simultaneously** (see orchestrator instructions). Do NOT spawn the adversarial agent here — it runs in Step 6A with full visibility of the consolidated response.
 
 Wait for all domain agent responses before proceeding.
 
-If an agent returns malformed output or fails: note the failure in Step 4 output, mark that domain as "unanalyzed", flag the coverage gap in Step 5, and continue. A single agent failure must not block the pipeline.
+If an agent returns malformed output or fails: note the failure in Step 3 output, mark that domain as "unanalyzed", flag the coverage gap in Step 4, and continue. A single agent failure must not block the pipeline.
 
 ### Domain agent prompt
 
@@ -332,7 +333,7 @@ The technical team will handle token mechanics. My domain is user-facing flow �
 </example>
 </examples>
 
-### Rendering — Step 4
+### Rendering — Step 3
 
 Parse each agent's JSON and render as readable markdown under a named subheading.
 
@@ -354,11 +355,11 @@ For domain agents:
 - [point] → [suggestion] _(omit arrow + suggestion if none)_
 ```
 
-_(The adversarial agent does not appear in Step 4 rendering — it runs in Step 6A.)_
+_(The adversarial agent does not appear in Step 3 rendering — it runs in Step 5.)_
 
 ---
 
-## Step 5 · Consolidation
+## Step 4 · Consolidation
 
 Merge all domain agent outputs into a **consolidated answer** to the original question. The output shape follows the nature of the question — not a fixed format imposed regardless of what was asked.
 
@@ -383,9 +384,9 @@ Higher weight = higher precedence. When agents disagree:
 6. **Flag unresolved questions**: Decisions or unknowns that could materially change the answer belong in Open Questions.
 7. **Verify coverage**: Confirm every Step 1 domain is represented; flag any gaps.
 
-_Note: adversarial review happens in Step 6A after this consolidation — do not attempt to anticipate it here._
+_Note: adversarial review happens in Step 5 after this consolidation — do not attempt to anticipate it here._
 
-**Output — Step 5:**
+**Output — Step 4:**
 
 _If any CONSULT-level domain was identified in Step 2, inject this advisory note first:_
 > **Advisory note:** This analysis includes CONSULT-level domain(s): [list]. Model-generated analysis should not substitute for qualified professional judgment in these areas.
@@ -416,7 +417,7 @@ _If any CONSULT-level domain was identified in Step 2, inject this advisory note
 
 ---
 
-## Step 6 · Adversarial Review
+## Step 5 · Adversarial Review
 
 Spawn the adversarial agent from the roster as a **single subagent**. It receives only the original request and the consolidated response — it does not see individual domain agent analyses.
 
@@ -472,9 +473,9 @@ Challenge the consolidated response against the original request:
 
 ---
 
-## Step 7 · Team Deliberation
+## Step 6 · Team Deliberation
 
-Step 6 must complete before Step 7 begins.
+Step 5 must complete before Step 6 begins.
 
 Spawn an **agent team** (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` — see fallback below).
 
@@ -539,7 +540,7 @@ Each teammate submits:
 - 🔴 **Red** — significant misalignment; unresolved concerns that materially affect the response
   - Sub-type `scope_drift`: team flagged that the consolidated response drifted from the original request
 
-**Rendering — Step 7:**
+**Rendering — Step 6:**
 ```markdown
 | Teammate | Alignment | Unresolved |
 |----------|-----------|-----------|
@@ -560,9 +561,9 @@ If `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is not set, run Phase B as parallel su
 
 ---
 
-## Step 8 · Final Output
+## Step 7 · Final Output
 
-Present the run **result-first**: the Result section appears at the top before the analysis detail. Use the tier-specific template for the Result section, then render all steps (0–7) after the `---` divider.
+Present the run **result-first**: the Result section appears at the top before the analysis detail. Use the tier-specific template for the Result section, then render all steps (0–6) after the `---` divider.
 
 **The Result section is always the first thing the user sees.** Status, plan, and caveats come before agent analyses. This applies to all three status paths (🟢 Green, 🟡 Yellow, 🔴 Red).
 
@@ -600,16 +601,16 @@ _This analysis reflects a single model's perspective — validate independently 
 ### Step 3 · Agent Roster
 [Step 3 output]
 
-### Step 4 · Agent Analyses
+### Step 3 · Agent Analyses
 [Step 4 rendered output — each agent under its own subheading]
 
-### Step 5 · Consolidated Findings
+### Step 4 · Consolidated Findings
 [Step 5 output]
 
-### Step 6 · Adversarial Review
+### Step 5 · Adversarial Review
 [Step 6 output]
 
-### Step 7 · Team Deliberation
+### Step 6 · Team Deliberation
 [Step 7 team table + team rating]
 ```
 
@@ -661,16 +662,16 @@ Result section target: ~400–600 words. Full findings with key decisions and tr
 ### Step 3 · Agent Roster
 [Step 3 output]
 
-### Step 4 · Agent Analyses
+### Step 3 · Agent Analyses
 [Step 4 rendered output — each agent under its own subheading]
 
-### Step 5 · Consolidated Findings
+### Step 4 · Consolidated Findings
 [Step 5 output]
 
-### Step 6 · Adversarial Review
+### Step 5 · Adversarial Review
 [Step 6 output]
 
-### Step 7 · Team Deliberation
+### Step 6 · Team Deliberation
 [Step 7 team table + team rating]
 ```
 
@@ -732,16 +733,16 @@ For high-stakes decisions, treat this analysis as structured preparation for —
 ### Step 3 · Agent Roster
 [Step 3 output]
 
-### Step 4 · Agent Analyses
+### Step 3 · Agent Analyses
 [Step 4 rendered output — each agent under its own subheading]
 
-### Step 5 · Consolidated Findings
+### Step 4 · Consolidated Findings
 [Step 5 output]
 
-### Step 6 · Adversarial Review
+### Step 5 · Adversarial Review
 [Step 6 output]
 
-### Step 7 · Team Deliberation
+### Step 6 · Team Deliberation
 [Step 7 team table + team rating]
 ```
 
