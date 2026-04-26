@@ -187,13 +187,9 @@ You may include a brief <thinking> block before the JSON.
 - `important` — should be addressed; skipping creates meaningful risk or lost value but won't necessarily block
 - `nice_to_have` — worth doing if time allows; low impact if deferred
 
-**Type labels:**
-- `risk` — something that could cause failure or significant harm if not mitigated
-- `preserve` — an existing behavior, pattern, or constraint that must not be broken
-- `recommendation` — an actionable improvement or best practice
-- `question` — a decision or unknown that needs resolution
-
 Omit any priority level your domain has nothing to contribute to. `assumptions` is always outside priority categorization.
+
+Each finding is a `point` (the concern or observation) with an optional `suggestion` (what to do about it). Omit `suggestion` only when the finding is a genuine unknown with no clear action yet.
 
 <agent_analysis>
 {
@@ -204,20 +200,20 @@ Omit any priority level your domain has nothing to contribute to. `assumptions` 
   ],
   "critical": [
     {
-      "type": "risk | preserve | recommendation | question",
-      "point": "Must be addressed — skipping causes failure, a security issue, or blocks progress entirely"
+      "point": "Must be addressed — skipping causes failure, a security issue, or blocks progress entirely",
+      "suggestion": "What to do about it — omit only if genuinely unresolved"
     }
   ],
   "important": [
     {
-      "type": "risk | preserve | recommendation | question",
-      "point": "Should be addressed — skipping creates meaningful risk or lost value"
+      "point": "Should be addressed — skipping creates meaningful risk or lost value",
+      "suggestion": "What to do about it — omit only if genuinely unresolved"
     }
   ],
   "nice_to_have": [
     {
-      "type": "recommendation | question",
-      "point": "Worth doing if time allows — low impact if deferred"
+      "point": "Worth doing if time allows — low impact if deferred",
+      "suggestion": "What to do about it — omit only if genuinely unresolved"
     }
   ]
 }
@@ -240,11 +236,16 @@ The user has made a direction decision I disagree with. Rolling custom auth is a
   "agent": "Authentication Architecture Specialist",
   "domain": "Authentication implementation strategy and security architecture for Next.js",
   "critical": [
-    { "type": "risk", "point": "Rolling custom auth from scratch is the wrong call for most Next.js applications. Auth is deceptively complex — token rotation, session fixation, credential stuffing, MFA, account recovery, and compliance edge cases take months to get right. A breach or missed edge case has severe consequences. Established providers (NextAuth.js, Auth0, Clerk) have solved these problems under production load." },
-    { "type": "recommendation", "point": "Use NextAuth.js (Auth.js) instead — it is purpose-built for Next.js, open source, and handles the full auth lifecycle including OAuth, credentials, JWTs, and database sessions. Custom auth should only be considered if you have compliance requirements that preclude third-party providers or highly unusual session semantics." }
+    {
+      "point": "Rolling custom auth from scratch is the wrong call for most Next.js applications. Auth is deceptively complex — token rotation, session fixation, credential stuffing, MFA, account recovery, and compliance edge cases take months to get right. A breach or missed edge case has severe consequences.",
+      "suggestion": "Use NextAuth.js (Auth.js) instead — purpose-built for Next.js, open source, handles the full auth lifecycle including OAuth, credentials, JWTs, and database sessions. Only build custom if compliance requirements explicitly preclude third-party providers."
+    }
   ],
   "important": [
-    { "type": "risk", "point": "If you proceed with custom auth, the maintenance burden is permanent — every security advisory, OAuth spec change, and framework upgrade becomes your team's problem to track and patch." }
+    {
+      "point": "If you proceed with custom auth, the maintenance burden is permanent — every security advisory, OAuth spec change, and framework upgrade becomes your team's problem to track and patch.",
+      "suggestion": "Budget ongoing security maintenance as a line item before committing to custom auth; if that's not feasible, it's another argument for a provider."
+    }
   ]
 }
 </agent_analysis>
@@ -263,15 +264,25 @@ Token storage is the most critical issue — localStorage is the common mistake 
   "agent": "JWT Implementation Specialist",
   "domain": "Token-based authentication implementation in Next.js",
   "critical": [
-    { "type": "risk", "point": "Storing JWT in localStorage exposes tokens to XSS attacks — httpOnly, Secure, SameSite=Strict cookies are the only safe default" }
+    {
+      "point": "Storing JWT in localStorage exposes tokens to XSS attacks — any injected script can exfiltrate the token.",
+      "suggestion": "Use httpOnly, Secure, SameSite=Strict cookies exclusively — this is not a preference, it's the only safe default."
+    }
   ],
   "important": [
-    { "type": "risk", "point": "Without a token refresh mechanism, users will be silently logged out when tokens expire" },
-    { "type": "recommendation", "point": "Implement a /api/auth/refresh endpoint with silent refresh logic triggered before expiry" },
-    { "type": "question", "point": "What is the desired session duration — short-lived tokens with refresh, or long-lived single tokens?" }
+    {
+      "point": "Without a token refresh mechanism, users are silently logged out when tokens expire, with no warning.",
+      "suggestion": "Implement a /api/auth/refresh endpoint with silent refresh logic triggered before expiry — probe remaining TTL on each authenticated request."
+    },
+    {
+      "point": "Session duration policy is unspecified — short-lived tokens with refresh and long-lived single tokens have very different security/UX tradeoffs."
+    }
   ],
   "nice_to_have": [
-    { "type": "recommendation", "point": "Use next-auth rather than rolling custom token logic — it handles edge cases that are easy to miss" }
+    {
+      "point": "Rolling custom token logic has well-known edge cases that are easy to miss.",
+      "suggestion": "Use next-auth if the project hasn't committed deeply to custom — it handles rotation, storage, and provider integration out of the box."
+    }
   ]
 }
 </agent_analysis>
@@ -290,14 +301,30 @@ The technical team will handle token mechanics. My domain is user-facing flow �
   "agent": "User Experience & Conversion Specialist",
   "domain": "User-facing authentication flow, friction, and conversion impact",
   "important": [
-    { "type": "risk", "point": "Generic error messages like 'invalid credentials' frustrate users and increase support load — distinguish wrong password, account not found, and account locked" },
-    { "type": "risk", "point": "Aggressive session timeouts increase re-login friction and measurably hurt retention" },
-    { "type": "recommendation", "point": "Surface the forgotten password link prominently before users hit frustration — not hidden below the form" }
+    {
+      "point": "Generic error messages like 'invalid credentials' frustrate users and increase support volume — users can't self-serve if they don't know whether it's a wrong password, missing account, or locked state.",
+      "suggestion": "Return distinct messages for wrong password, account not found, and account locked — each with a clear next action."
+    },
+    {
+      "point": "Aggressive session timeouts increase re-login friction and measurably hurt retention, especially on low-frequency workflows.",
+      "suggestion": "Calibrate timeout to actual usage patterns; offer session extension prompts rather than silent expiry."
+    },
+    {
+      "point": "Forgotten password links buried below the form are frequently missed at exactly the moment of highest frustration.",
+      "suggestion": "Surface the forgotten password link above the submit button, not below — users scan top to bottom when they fail."
+    }
   ],
   "nice_to_have": [
-    { "type": "recommendation", "point": "Offer a 'remember me' option that extends session duration for returning users on trusted devices" },
-    { "type": "question", "point": "Is social login (Google / GitHub) in scope for this release or deferred?" },
-    { "type": "question", "point": "Should enterprise accounts have stricter session policies than individual users?" }
+    {
+      "point": "Returning users on trusted devices expect a 'remember me' option — without it, re-login friction compounds over time.",
+      "suggestion": "Add a remember me checkbox that extends session TTL for that device."
+    },
+    {
+      "point": "Social login scope (Google / GitHub) is unspecified — deferring it later is more expensive than deciding now."
+    },
+    {
+      "point": "Enterprise accounts may require stricter session policies than individual users — unresolved if multi-tenant is in scope."
+    }
   ]
 }
 </agent_analysis>
@@ -317,13 +344,13 @@ For domain agents:
 - [assumption]
 
 **Critical** _(omit section if none)_
-- `[type]` [point]
+- [point] → [suggestion] _(omit arrow + suggestion if none)_
 
 **Important** _(omit section if none)_
-- `[type]` [point]
+- [point] → [suggestion] _(omit arrow + suggestion if none)_
 
 **Nice to have** _(omit section if none)_
-- `[type]` [point]
+- [point] → [suggestion] _(omit arrow + suggestion if none)_
 ```
 
 _(The adversarial agent does not appear in Step 4 rendering — it runs in Step 6A.)_
