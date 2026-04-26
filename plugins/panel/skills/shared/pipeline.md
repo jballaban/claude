@@ -87,7 +87,7 @@ Spawn the `analyze-domains` skill as a **Sonnet subagent**, passing:
 
 Use the `analyze-domains` output directly as Step 1's domain list. Do not re-rank or re-derive domains.
 
-**Mapping `DOMAIN_COUNT`:** The tiered output guides coverage decisions in Step 3. Critical domains always count first. Fill remaining `DOMAIN_COUNT` capacity with Important. Adjacent domains are only included if the Step 3 agent budget (`AGENT_MAX`) allows after Critical and Important are fully covered.
+The full tiered list passes directly to `assemble-agents` in Steps 2–3, which enforces the agent budget. Do not filter or truncate domains here.
 
 Also carry forward any **assumptions** or **ambiguities** surfaced by `analyze-domains`.
 
