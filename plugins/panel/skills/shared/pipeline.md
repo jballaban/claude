@@ -12,8 +12,9 @@ Shared algorithm for `/ask`, `/panel`, and `/council`. Each skill defines its ti
 - [Step 3: Dynamic Agent Synthesis](#step-3--dynamic-agent-synthesis)
 - [Step 4: Parallel Agent Analysis](#step-4--parallel-agent-analysis)
 - [Step 5: Consolidation](#step-5--consolidation)
-- [Step 6: Validation Round](#step-6--validation-round)
-- [Step 7: Final Output](#step-7--final-output)
+- [Step 6: Adversarial Review](#step-6--adversarial-review)
+- [Step 7: Team Deliberation](#step-7--team-deliberation)
+- [Step 8: Final Output](#step-8--final-output)
 
 ---
 
@@ -415,13 +416,7 @@ _If any CONSULT-level domain was identified in Step 2, inject this advisory note
 
 ---
 
-## Step 6 · Adversarial Review + Team Deliberation
-
-Two sequential phases. Phase A must complete before Phase B begins.
-
----
-
-### Phase A · Adversarial Review
+## Step 6 · Adversarial Review
 
 Spawn the adversarial agent from the roster as a **single subagent**. It receives only the original request and the consolidated response — it does not see individual domain agent analyses.
 
@@ -460,7 +455,7 @@ Challenge the consolidated response against the original request:
 </adversarial_review>
 ```
 
-**Phase A rendering:**
+**Rendering — Step 6:**
 ```markdown
 ### Adversarial Review
 **Verdict:** [fatal | severe | manageable | sound] — [verdict_reason]
@@ -477,7 +472,9 @@ Challenge the consolidated response against the original request:
 
 ---
 
-### Phase B · Team Deliberation
+## Step 7 · Team Deliberation
+
+Step 6 must complete before Step 7 begins.
 
 Spawn an **agent team** (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` — see fallback below).
 
@@ -542,12 +539,8 @@ Each teammate submits:
 - 🔴 **Red** — significant misalignment; unresolved concerns that materially affect the response
   - Sub-type `scope_drift`: team flagged that the consolidated response drifted from the original request
 
-**Output — Step 6:**
+**Rendering — Step 7:**
 ```markdown
-### Phase A · Adversarial Review
-[Phase A rendering]
-
-### Phase B · Team Deliberation
 | Teammate | Alignment | Unresolved |
 |----------|-----------|-----------|
 | [Agent Name] | agree / partial / disagree | [concern or —] |
@@ -567,9 +560,9 @@ If `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is not set, run Phase B as parallel su
 
 ---
 
-## Step 7 · Final Output
+## Step 8 · Final Output
 
-Present the run **result-first**: the Result section appears at the top before the analysis detail. Use the tier-specific template for the Result section, then render all steps (0–6) after the `---` divider.
+Present the run **result-first**: the Result section appears at the top before the analysis detail. Use the tier-specific template for the Result section, then render all steps (0–7) after the `---` divider.
 
 **The Result section is always the first thing the user sees.** Status, plan, and caveats come before agent analyses. This applies to all three status paths (🟢 Green, 🟡 Yellow, 🔴 Red).
 
@@ -613,8 +606,11 @@ _This analysis reflects a single model's perspective — validate independently 
 ### Step 5 · Consolidated Findings
 [Step 5 output]
 
-### Step 6 · Adversarial Review + Team Deliberation
-[Step 6 Phase A adversarial rendering + Phase B team table + team rating]
+### Step 6 · Adversarial Review
+[Step 6 output]
+
+### Step 7 · Team Deliberation
+[Step 7 team table + team rating]
 ```
 
 ---
@@ -671,8 +667,11 @@ Result section target: ~400–600 words. Full findings with key decisions and tr
 ### Step 5 · Consolidated Findings
 [Step 5 output]
 
-### Step 6 · Adversarial Review + Team Deliberation
-[Step 6 Phase A adversarial rendering + Phase B team table + team rating]
+### Step 6 · Adversarial Review
+[Step 6 output]
+
+### Step 7 · Team Deliberation
+[Step 7 team table + team rating]
 ```
 
 ---
@@ -739,8 +738,11 @@ For high-stakes decisions, treat this analysis as structured preparation for —
 ### Step 5 · Consolidated Findings
 [Step 5 output]
 
-### Step 6 · Adversarial Review + Team Deliberation
-[Step 6 Phase A adversarial rendering + Phase B team table + team rating]
+### Step 6 · Adversarial Review
+[Step 6 output]
+
+### Step 7 · Team Deliberation
+[Step 7 team table + team rating]
 ```
 
 ---

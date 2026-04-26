@@ -105,7 +105,7 @@ _If any CONSULT-level domain was identified in Step 2, inject first:_
 
 ## Step 6 · Validation Round
 
-Run three tracks **simultaneously** using the validation prompts from [../shared/pipeline.md](../shared/pipeline.md) Step 6, substituting `[STEP_5_OUTPUT]` with the phased plan above.
+Run three tracks **simultaneously** using the validation prompts from [../shared/pipeline.md](../shared/pipeline.md) Steps 6–7, substituting `[STEP_5_OUTPUT]` with the phased plan above.
 
 The Naive Plan Reviewer (Track A) checks whether the phases cover everything in the spec.
 The scope-only domain agents (Track B) check whether phasing introduced scope beyond the spec.
@@ -159,8 +159,11 @@ Use the same rating definitions and overall status (🟢 Green / 🟡 Yellow / �
 ### Step 5 · Phased Plan
 [Step 5 output]
 
-### Step 6 · Validation
-[Step 6 table + overall status]
+### Step 6 · Adversarial Review
+[Step 6 output]
+
+### Step 7 · Team Deliberation
+[Step 7 table + overall status]
 ```
 
 **If 🔴 Red:**
