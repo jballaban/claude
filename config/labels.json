@@ -1,0 +1,47 @@
+[
+  {
+    "name": "claude:work-this",
+    "color": "0052cc",
+    "description": "Enroll this issue in the Claude pipeline"
+  },
+  {
+    "name": "claude:awaiting-approval",
+    "color": "fbca04",
+    "description": "Pipeline paused for human action"
+  },
+  {
+    "name": "claude:rejected",
+    "color": "b60205",
+    "description": "Human rejected the current stage's output"
+  },
+  {
+    "name": "stage:triage",
+    "color": "5319e7",
+    "description": "Triage stage: scoping and clarification"
+  },
+  {
+    "name": "stage:plan",
+    "color": "5319e7",
+    "description": "Plan stage: detailed plan being prepared"
+  },
+  {
+    "name": "stage:dev",
+    "color": "5319e7",
+    "description": "Development stage: implementation in progress"
+  },
+  {
+    "name": "stage:qa",
+    "color": "5319e7",
+    "description": "Verification stage: QA testing in progress"
+  },
+  {
+    "name": "stage:deploy",
+    "color": "5319e7",
+    "description": "Deployment review stage"
+  },
+  {
+    "name": "stage:pr",
+    "color": "0e8a16",
+    "description": "Ready for human review and merge"
+  }
+]

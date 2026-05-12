@@ -1,0 +1,32 @@
+# Example consuming-repo workflow.
+# Drop this into a downstream repo at .github/workflows/claude.yml.
+#
+# Requires:
+#   - Repo secret CLAUDE_CODE_OAUTH_TOKEN (generate with `claude setup-token`)
+#
+# Labels are created automatically by the first workflow run
+# (see scripts/ensure-labels.sh in the template repo) — no manual setup needed.
+# To start: apply the `claude:work-this` label to any issue.
+
+name: Claude Pipeline
+
+on:
+  issues:
+    types: [labeled, unlabeled]
+
+jobs:
+  triage:
+    # Triage runs when:
+    #   - claude:work-this is applied (initial enrollment); workflow consumes it
+    #   - stage:triage is applied (Plan kicked back due to scope drift)
+    #   - claude:awaiting-approval is removed while stage:triage is set (human answered)
+    if: >-
+      (github.event.action == 'labeled' && github.event.label.name == 'claude:work-this') ||
+      (github.event.action == 'labeled' && github.event.label.name == 'stage:triage') ||
+      (github.event.action == 'unlabeled' && github.event.label.name == 'claude:awaiting-approval' &&
+       contains(github.event.issue.labels.*.name, 'stage:triage'))
+    uses: jballaban/claude.workflow/.github/workflows/triage.yml@main
+    with:
+      issue_number: ${{ github.event.issue.number }}
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

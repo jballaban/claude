@@ -1,0 +1,86 @@
+name: Triage Stage
+
+# Reusable workflow. Consuming repos call this via `uses:` when an issue
+# enters or re-enters the Triage stage. See examples/consuming-repo/claude.yml.
+
+on:
+  workflow_call:
+    inputs:
+      issue_number:
+        type: number
+        required: true
+      model:
+        type: string
+        required: false
+        default: claude-opus-4-7
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN:
+        required: true
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ inputs.issue_number }}
+    steps:
+      - name: Checkout workflow template
+        uses: actions/checkout@v4
+        with:
+          repository: jballaban/claude.workflow
+          ref: main
+          path: __workflow
+
+      - name: Ensure pipeline labels exist
+        working-directory: __workflow
+        run: bash scripts/ensure-labels.sh config/labels.json
+
+      - name: Normalize labels (consume claude:work-this on initial entry)
+        run: |
+          set -euo pipefail
+          LABELS=$(gh issue view "$ISSUE" --json labels --jq '[.labels[].name] | join(",")')
+          if [[ ",$LABELS," == *",claude:work-this,"* ]]; then
+            gh issue edit "$ISSUE" --remove-label "claude:work-this" --add-label "stage:triage"
+            gh issue comment "$ISSUE" --body "🔍 Entering **Triage** stage."
+          fi
+
+      - name: Run Triage agent
+        id: agent
+        uses: anthropics/claude-code-action@v1
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        with:
+          prompt: |
+            Read and follow the system prompt at `__workflow/agents/triage/prompt.md` exactly.
+            The issue to triage is #${{ inputs.issue_number }} in this repo.
+            Post your analysis as a comment on that issue, then return your decision via structured output.
+          claude_args: |
+            --model ${{ inputs.model }}
+            --json-schema '{"type":"object","properties":{"decision":{"type":"string","enum":["READY","ASK","SPLIT"]},"summary":{"type":"string"}},"required":["decision"]}'
+
+      - name: Route on decision
+        env:
+          DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
+        run: |
+          set -euo pipefail
+          case "$DECISION" in
+            READY)
+              gh issue edit "$ISSUE" --remove-label "stage:triage" --add-label "stage:plan"
+              gh issue comment "$ISSUE" --body "✅ Triage complete → advancing to **Plan**."
+              ;;
+            ASK)
+              gh issue edit "$ISSUE" --add-label "claude:awaiting-approval"
+              gh issue comment "$ISSUE" --body "⏸ Awaiting your answers above. Remove the \`claude:awaiting-approval\` label after you've answered, and Triage will re-run."
+              ;;
+            SPLIT)
+              gh issue edit "$ISSUE" --add-label "claude:awaiting-approval"
+              gh issue comment "$ISSUE" --body "✂️ This issue is too large. File the proposed child issues, then remove \`claude:awaiting-approval\` to proceed."
+              ;;
+            *)
+              gh issue comment "$ISSUE" --body "⚠️ Triage agent returned an unexpected decision: \`$DECISION\`. Pipeline halted."
+              exit 1
+              ;;
+          esac
