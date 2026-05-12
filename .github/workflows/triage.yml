@@ -23,6 +23,7 @@ jobs:
     permissions:
       issues: write
       contents: read
+      id-token: write
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}

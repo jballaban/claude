@@ -31,6 +31,7 @@ jobs:
     permissions:
       issues: write
       contents: read
+      id-token: write
     uses: jballaban/claude/.github/workflows/triage.yml@main
     with:
       issue_number: ${{ github.event.issue.number }}
