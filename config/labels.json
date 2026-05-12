@@ -43,5 +43,10 @@
     "name": "stage:pr",
     "color": "0e8a16",
     "description": "Ready for human review and merge"
+  },
+  {
+    "name": "stage:deploy",
+    "color": "0e8a16",
+    "description": "PR merged; awaiting deployment to production"
   }
 ]

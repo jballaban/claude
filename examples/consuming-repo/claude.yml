@@ -17,6 +17,8 @@ name: Claude Pipeline
 on:
   issues:
     types: [labeled, unlabeled]
+  pull_request:
+    types: [closed]
 
 jobs:
   triage:
@@ -123,6 +125,27 @@ jobs:
       issue_number: ${{ github.event.issue.number }}
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      CLAUDE_PIPELINE_PAT: ${{ secrets.CLAUDE_PIPELINE_PAT }}
+
+  post-merge:
+    # Post-merge handoff runs when a PR from a claude/issue-* branch is merged.
+    # It relabels the issue from stage:pr → stage:deploy, copies the deployment
+    # steps from the PR body into a fresh issue comment (the issue is the
+    # source of truth post-merge), and tells the human which labels to toggle
+    # to finalize.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'claude/issue-')
+    permissions:
+      issues: write
+      pull-requests: read
+      id-token: write
+    uses: jballaban/claude/.github/workflows/post-merge.yml@main
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      branch: ${{ github.event.pull_request.head.ref }}
+    secrets:
       CLAUDE_PIPELINE_PAT: ${{ secrets.CLAUDE_PIPELINE_PAT }}
 
   plan-decide:

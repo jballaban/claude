@@ -1,0 +1,105 @@
+name: Post-Merge Handoff
+
+# Reusable workflow. Consuming repos call this when a pull request from a
+# claude/issue-* branch is merged. Hands the issue off to the manual Deploy
+# stage: relabels stage:pr → stage:deploy, lifts the Launch checklist and
+# Rollback sections from the PR body into a fresh issue comment (the issue
+# is the source of truth from here on, not the closed PR), and tells the
+# human exactly which labels to toggle to finalize.
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        type: number
+        required: true
+      branch:
+        type: string
+        required: true
+    secrets:
+      CLAUDE_PIPELINE_PAT:
+        required: true
+
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: read
+    env:
+      # PAT (not GITHUB_TOKEN) so the stage:deploy label we add actually fires
+      # any downstream workflow that may listen for it in the future.
+      GH_TOKEN: ${{ secrets.CLAUDE_PIPELINE_PAT }}
+      GH_REPO: ${{ github.repository }}
+      PR: ${{ inputs.pr_number }}
+      BRANCH: ${{ inputs.branch }}
+    steps:
+      - name: Checkout workflow template
+        uses: actions/checkout@v4
+        with:
+          repository: jballaban/claude
+          ref: main
+          path: __workflow
+
+      - name: Ensure pipeline labels exist
+        working-directory: __workflow
+        run: bash scripts/ensure-labels.sh config/labels.json
+
+      - name: Identify linked issue from branch name
+        id: issue
+        run: |
+          set -euo pipefail
+          # Branch convention: claude/issue-<N>-<slug>
+          ISSUE_NUM=$(printf '%s' "$BRANCH" | sed -nE 's|^claude/issue-([0-9]+)-.*|\1|p')
+          if [[ -z "$ISSUE_NUM" ]]; then
+            echo "::error::Could not extract issue number from branch '$BRANCH'"
+            exit 1
+          fi
+          echo "number=$ISSUE_NUM" >> "$GITHUB_OUTPUT"
+
+      - name: Extract Launch checklist and Rollback from PR body
+        id: ops
+        run: |
+          set -euo pipefail
+          gh pr view "$PR" --json body --jq '.body' > /tmp/pr-body.md
+          # Pull the contiguous section starting at a header through the next ###
+          awk '/^### Launch checklist/{f=1; print; next} f && /^### / {f=0} f' /tmp/pr-body.md > /tmp/launch.md
+          awk '/^### Rollback/{f=1; print; next} f && /^### / {f=0} f' /tmp/pr-body.md > /tmp/rollback.md
+          if [[ ! -s /tmp/launch.md ]]; then
+            echo "(Launch checklist section not found in PR body — see the merged PR directly.)" > /tmp/launch.md
+          fi
+          if [[ ! -s /tmp/rollback.md ]]; then
+            echo "(Rollback section not found in PR body — see the merged PR directly.)" > /tmp/rollback.md
+          fi
+          {
+            echo "launch<<EOF_LAUNCH"
+            cat /tmp/launch.md
+            echo "EOF_LAUNCH"
+            echo "rollback<<EOF_ROLLBACK"
+            cat /tmp/rollback.md
+            echo "EOF_ROLLBACK"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Hand off to Deploy stage
+        env:
+          ISSUE: ${{ steps.issue.outputs.number }}
+          LAUNCH: ${{ steps.ops.outputs.launch }}
+          ROLLBACK: ${{ steps.ops.outputs.rollback }}
+        run: |
+          set -euo pipefail
+          gh issue edit "$ISSUE" --remove-label "stage:pr" --add-label "stage:deploy" --add-label "claude:awaiting-approval"
+          BODY=$(cat <<MSG
+          🚢 PR #${PR} merged → entering **Deploy** stage. The issue is the source of truth for the deployment from here on.
+
+          ${LAUNCH}
+
+          ${ROLLBACK}
+
+          ---
+          **To finalize:**
+
+          - When the deployment is complete and verified in production, **remove the \`claude:awaiting-approval\` label** to mark the deployment done. The issue stays open; close it manually when you're satisfied.
+          - If the deployment failed or needs to be rolled back, **apply the \`claude:rejected\` label**. (Auto-rollback is not yet wired up — follow the Rollback steps above by hand for now.)
+          MSG
+          )
+          gh issue comment "$ISSUE" --body "$BODY"
