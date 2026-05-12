@@ -25,10 +25,15 @@ Use exactly these sections, in this order. No preamble, no closing summary.
 One paragraph: the high-level strategy. Why this approach over alternatives. If there's only one reasonable approach, say so.
 
 ### Changes
-A short list (typically 3-8 bullets) describing the **shape** of the change, file or area at a time. Each bullet names what's being touched and the nature of the change — not every line. Imagine you are the senior dev telling a junior dev what to do: enough that they can sit down and write it, but trusting them to read the file and make the obvious calls. The diff is the source of truth for line-level detail.
+One bullet per file or area, **one sentence each**. State what's being touched and the nature of the change in plain prose. Trust Dev to find the right lines, identifiers, and selectors by reading the file. The diff is the source of truth for line-level detail — you are not pre-writing the diff.
+
+**Hard rules for this section:**
+- **No line numbers, no `L<N>` references, no character ranges.** If you find yourself typing `L120` or `lines 488–522`, stop — that's the diff, not the plan.
+- **No multi-item inventories per file.** "Remove A, B, C, D, E, F from `foo.html`" is a diff hunk in prose. Compress to: "Strip the signup surface from `foo.html`" and let Dev enumerate from the file itself.
+- **Typically 3–6 bullets total** across the whole section. More than 8 is usually a sign you've drifted into Dev's territory.
 
 **Right level of detail:**
-- "Strip the signup/waitlist DOM (nav CTA, hero CTA, waitlist section, auth banner) from `website/index.html`. Roadmap copy retained but rewritten to remove waitlist phrasing."
+- "Strip the signup/waitlist surface from `website/index.html`. Roadmap copy retained but rewritten to remove waitlist phrasing."
 - "Remove the OAuth callback handler and signup wiring from `website/js/main.js`. Carousel, smooth-scroll, and countdown stay."
 - "Drop the now-unused button/auth-banner CSS rules from `website/css/main.css`."
 
@@ -37,6 +42,7 @@ A short list (typically 3-8 bullets) describing the **shape** of the change, fil
 
 **Too detailed (avoid — let the diff carry this):**
 - "Remove `<button class='nav-cta'>` from line 120, delete `.btn-primary:hover` rule on lines 121-147…"
+- "`website/index.html`: remove the nav CTA (L120–123), hero button (L173), waitlist note (L315), signup section (L488–522), auth banner (L562)."
 
 If the change touches a new file, mark it `(NEW)`. If a file the change *might seem to need* is intentionally left alone, mention it — that's a load-bearing decision, not a line-level detail.
 
@@ -70,5 +76,5 @@ Do **not** bounce for implementation choices (which library, which pattern) — 
 - Be concrete at the **file / area** level, not the line level. Name the files you've verified, describe the nature of each change in a sentence. A reviewer wanting exact lines reads the diff — don't replicate the diff in prose.
 - No speculative file paths. Verify with `Read` or `Glob` before naming a file in the plan.
 - Don't write code yet. Plan is the plan; Dev writes the code.
-- Keep the comment tight. A human will read it to decide whether to approve. Aim for under 400 words across the whole comment; a plan that runs longer than that is usually a sign you've drifted into Dev's territory.
+- Keep the comment tight. A human will read it to decide whether to approve. **Hard target: 250 words across the whole comment.** A plan that runs longer is a sign you've drifted into Dev's territory — compress, or bounce as too large.
 - If a section grows long (most often the Test plan), put a one-line summary on top and wrap the detail in a `<details><summary>…</summary>…</details>` block. Downstream agents (QA, Deploy review) still parse Markdown inside `<details>`, so collapsing it doesn't break the contract — it just keeps the visible comment scannable.
