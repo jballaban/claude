@@ -30,7 +30,7 @@ jobs:
       - name: Checkout workflow template
         uses: actions/checkout@v4
         with:
-          repository: jballaban/claude.workflow
+          repository: jballaban/claude
           ref: main
           path: __workflow
 

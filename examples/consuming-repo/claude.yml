@@ -25,7 +25,7 @@ jobs:
       (github.event.action == 'labeled' && github.event.label.name == 'stage:triage') ||
       (github.event.action == 'unlabeled' && github.event.label.name == 'claude:awaiting-approval' &&
        contains(github.event.issue.labels.*.name, 'stage:triage'))
-    uses: jballaban/claude.workflow/.github/workflows/triage.yml@main
+    uses: jballaban/claude/.github/workflows/triage.yml@main
     with:
       issue_number: ${{ github.event.issue.number }}
     secrets:
