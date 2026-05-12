@@ -35,9 +35,9 @@
     "description": "Verification stage: QA testing in progress"
   },
   {
-    "name": "stage:deploy",
+    "name": "stage:deploy-review",
     "color": "5319e7",
-    "description": "Deployment review stage"
+    "description": "Deploy-readiness review stage (does not deploy)"
   },
   {
     "name": "stage:pr",

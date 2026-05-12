@@ -1,7 +1,11 @@
-name: Verification (QA) Stage
+name: Deploy Review Stage
 
-# Reusable workflow. Consuming repos call this when an issue enters the QA
-# stage (Dev returned DONE). See examples/consuming-repo/claude.yml.
+# Reusable workflow. Consuming repos call this when an issue enters the
+# Deploy review stage (QA passed). See examples/consuming-repo/claude.yml.
+#
+# Despite the name, this stage does NOT deploy — it enumerates deploy-time
+# concerns and verifies what can be verified pre-merge. Actual deployment
+# happens after a human merges the PR.
 
 on:
   workflow_call:
@@ -18,7 +22,7 @@ on:
         required: true
 
 jobs:
-  qa:
+  deploy-review:
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -52,7 +56,7 @@ jobs:
           BRANCH=$(git ls-remote --heads origin "claude/issue-${ISSUE}-*" \
             | awk '{print $2}' | sed 's|refs/heads/||' | head -1)
           if [[ -z "$BRANCH" ]]; then
-            gh issue comment "$ISSUE" --body "⚠️ QA could not find a working branch matching \`claude/issue-${ISSUE}-*\`. Pipeline halted."
+            gh issue comment "$ISSUE" --body "⚠️ Deploy review could not find a working branch matching \`claude/issue-${ISSUE}-*\`. Pipeline halted."
             exit 1
           fi
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
@@ -60,18 +64,18 @@ jobs:
           git checkout "$BRANCH"
 
       - name: Announce entry
-        run: gh issue comment "$ISSUE" --body "🧪 Entering **QA** stage on branch \`${{ steps.branch.outputs.branch }}\`."
+        run: gh issue comment "$ISSUE" --body "🚦 Entering **Deploy review** stage on branch \`${{ steps.branch.outputs.branch }}\`."
 
-      - name: Run QA agent
+      - name: Run Deploy review agent
         id: agent
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            Read and follow the system prompt at `__workflow/agents/qa/prompt.md` exactly.
+            Read and follow the system prompt at `__workflow/agents/deploy-review/prompt.md` exactly.
             The issue is #${{ inputs.issue_number }} in this repo.
             You are already checked out on branch `${{ steps.branch.outputs.branch }}`.
-            Execute the Plan's Test plan, post a results comment, then return your decision via structured output.
+            Enumerate deploy-time concerns, verify what you can, post a readiness comment, then return your decision via structured output.
           claude_args: |
             --model ${{ inputs.model }}
             --allowedTools "Bash,Read,Glob,Grep,Write"
@@ -86,14 +90,14 @@ jobs:
           set -euo pipefail
           case "$DECISION" in
             DONE)
-              gh issue edit "$ISSUE" --remove-label "stage:qa" --add-label "stage:deploy-review"
-              gh issue comment "$ISSUE" --body "✅ QA passed → advancing to **Deploy review**."
+              gh issue edit "$ISSUE" --remove-label "stage:deploy-review" --add-label "stage:pr"
+              gh issue comment "$ISSUE" --body "✅ Deploy review passed → advancing to **PR**."
               ;;
             BOUNCE)
-              bash scripts/bounce.sh "qa-dev" "stage:qa" "stage:dev" "$BOUNCE_REASON"
+              bash scripts/bounce.sh "deploy-review-dev" "stage:deploy-review" "stage:dev" "$BOUNCE_REASON"
               ;;
             *)
-              gh issue comment "$ISSUE" --body "⚠️ QA agent returned an unexpected decision: \`$DECISION\`. Pipeline halted."
+              gh issue comment "$ISSUE" --body "⚠️ Deploy review agent returned an unexpected decision: \`$DECISION\`. Pipeline halted."
               exit 1
               ;;
           esac

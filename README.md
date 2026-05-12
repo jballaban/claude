@@ -65,7 +65,7 @@ To reject an agent's output at any stage, apply the `claude:rejected` label.
 | Label | Purpose |
 |---|---|
 | `claude:work-this` | Apply to enroll an issue. Consumed by the workflow on entry. |
-| `stage:triage` / `stage:plan` / `stage:dev` / `stage:qa` / `stage:deploy` / `stage:pr` | Current stage. Exactly one is set while the pipeline is running. |
+| `stage:triage` / `stage:plan` / `stage:dev` / `stage:qa` / `stage:deploy-review` / `stage:pr` | Current stage. Exactly one is set while the pipeline is running. |
 | `claude:awaiting-approval` | Pipeline is paused for human input. Remove to advance, or apply `claude:rejected` to reject. |
 | `claude:rejected` | Human rejected the current stage's output. |
 | `bounce:<from>-<to>:<N>` | Bounce counter between two adjacent stages. Created on demand. At `N=3` the pipeline halts and asks for human help. |

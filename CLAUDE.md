@@ -35,7 +35,7 @@ Downstream repos consume the pipeline via `workflow_call`. A consuming repo's `.
 The label vocabulary the workflow owns:
 
 - `claude:work-this` — applied by a human to enroll an issue. This is the pipeline **trigger**.
-- `stage:triage` | `stage:plan` | `stage:dev` | `stage:qa` | `stage:deploy` | `stage:pr` — current stage (exactly one at a time).
+- `stage:triage` | `stage:plan` | `stage:dev` | `stage:qa` | `stage:deploy-review` | `stage:pr` — current stage (exactly one at a time).
 - `bounce:<from>-<to>:<N>` — bounce counter per stage-pair (e.g. `bounce:dev-qa:2`). Workflow halts at N=3.
 - `claude:awaiting-approval` — applied by the workflow at human gates (e.g. plan approval, post-bounce-3 intervention). Human **removes** the label to approve, or applies `claude:rejected` to reject. Either action fires the next workflow run.
 
