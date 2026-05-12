@@ -98,6 +98,23 @@ jobs:
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
+  pr:
+    # PR runs when:
+    #   - stage:pr is applied (Deploy review passed)
+    # This is the terminal automated stage. After it runs, a human owns the change.
+    if: >-
+      github.event.action == 'labeled' && github.event.label.name == 'stage:pr'
+    permissions:
+      issues: write
+      contents: read
+      pull-requests: write
+      id-token: write
+    uses: jballaban/claude/.github/workflows/pr.yml@main
+    with:
+      issue_number: ${{ github.event.issue.number }}
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
   plan-decide:
     # Handles human verdict on a Plan-stage approval gate:
     #   - approval = claude:awaiting-approval removed → advance to stage:dev

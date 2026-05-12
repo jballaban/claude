@@ -1,0 +1,98 @@
+name: PR Stage
+
+# Reusable workflow. Consuming repos call this when an issue enters the PR
+# stage (Deploy review passed). See examples/consuming-repo/claude.yml.
+#
+# This is the terminal automated stage. The agent opens the pull request;
+# the workflow flips the issue to claude:awaiting-approval and stops.
+# A human merges the PR and closes the issue. No auto-merge, no auto-close.
+
+on:
+  workflow_call:
+    inputs:
+      issue_number:
+        type: number
+        required: true
+      model:
+        type: string
+        required: false
+        default: claude-opus-4-7
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN:
+        required: true
+
+jobs:
+  pr:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+      pull-requests: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ISSUE: ${{ inputs.issue_number }}
+    steps:
+      - name: Checkout consuming repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout workflow template
+        uses: actions/checkout@v4
+        with:
+          repository: jballaban/claude
+          ref: main
+          path: __workflow
+
+      - name: Ensure pipeline labels exist
+        working-directory: __workflow
+        run: bash scripts/ensure-labels.sh config/labels.json
+
+      - name: Locate and check out working branch
+        id: branch
+        run: |
+          set -euo pipefail
+          BRANCH=$(git ls-remote --heads origin "claude/issue-${ISSUE}-*" \
+            | awk '{print $2}' | sed 's|refs/heads/||' | head -1)
+          if [[ -z "$BRANCH" ]]; then
+            gh issue comment "$ISSUE" --body "⚠️ PR stage could not find a working branch matching \`claude/issue-${ISSUE}-*\`. Pipeline halted."
+            exit 1
+          fi
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          git fetch origin "$BRANCH:$BRANCH"
+          git checkout "$BRANCH"
+
+      - name: Announce entry
+        run: gh issue comment "$ISSUE" --body "🚀 Entering **PR** stage — opening a pull request from \`${{ steps.branch.outputs.branch }}\`."
+
+      - name: Run PR agent
+        id: agent
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Read and follow the system prompt at `__workflow/agents/pr/prompt.md` exactly.
+            The issue is #${{ inputs.issue_number }} in this repo.
+            You are already checked out on branch `${{ steps.branch.outputs.branch }}`.
+            Compose the PR body, open the PR via `gh pr create`, then return your decision via structured output.
+          claude_args: |
+            --model ${{ inputs.model }}
+            --allowedTools "Bash,Read,Glob,Grep,Write"
+            --json-schema '{"type":"object","properties":{"decision":{"type":"string","enum":["DONE"]},"summary":{"type":"string"}},"required":["decision","summary"]}'
+
+      - name: Hand off to human reviewer
+        env:
+          DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
+          PR_URL: ${{ fromJSON(steps.agent.outputs.structured_output).summary }}
+        run: |
+          set -euo pipefail
+          if [[ "$DECISION" != "DONE" ]]; then
+            gh issue comment "$ISSUE" --body "⚠️ PR agent returned an unexpected decision: \`$DECISION\`. Pipeline halted."
+            exit 1
+          fi
+          gh issue edit "$ISSUE" --add-label "claude:awaiting-approval"
+          gh issue comment "$ISSUE" --body "⏸ Pull request open: ${PR_URL}
+
+Pipeline complete. Review and merge the PR when ready, then close this issue. No further automation will run on this issue."
