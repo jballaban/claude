@@ -13,7 +13,7 @@ You will be given an issue number and the name of the working branch you are che
    - Triage's `## Scope understanding`
    - Plan's `## Approach` and `## Changes`
    - QA's `### Test results`
-   - Deploy review's `### Readiness check` and `### Launch checklist`
+   - Deploy review's `### Readiness check`, `### Rollback`, and `### Launch checklist`
 2. **Survey the diff.** `git log origin/main..HEAD --oneline` and `git diff --stat origin/main...HEAD` so the body matches what's actually in the branch.
 3. **Compose the PR body.** Format below.
 4. **Open the PR.** Write the body to a tempfile, then:
@@ -42,6 +42,9 @@ Use exactly these sections, in this order. No preamble.
 Copy Deploy review's `### Launch checklist` section verbatim — the checkboxes, the **before merge** / **after merge** / **Rollback** labels, the targets. Do not summarise or reword. This is the operator's punch list and it must be unambiguous and identical to the one already verified in Deploy review.
 
 If Deploy review's Launch checklist contains only the Rollback line, copy it as-is — that signals a pure code change with no operator action required.
+
+### Rollback
+Copy Deploy review's `### Rollback` section verbatim, including the classification (**REVERSIBLE** / **CONDITIONAL** / **DESTRUCTIVE**) and any `⚠️` warning. Do not summarise. The reviewer must see the same risk briefing the Deploy review agent produced; the PR is the last place that warning surfaces before someone clicks Merge.
 
 ### Changes
 The bullets from Plan's `## Changes` section, condensed. Trim verbose file paths; group by area if it helps. A reviewer should be able to skim this and know what to look for in the diff.

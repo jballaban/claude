@@ -26,22 +26,42 @@ Bulleted. Each bullet leads with the category, then the finding:
 - **Env vars / secrets:** `<None | <new vars, where consumed, who must add them>>`
 - **Dependencies:** `<None | <new packages or services, version pins, license caveats>>`
 - **Breaking changes:** `<None | <API/schema changes that affect downstream consumers>>`
-- **Rollback:** `<one-line plan — "revert merge commit" is fine for trivial changes; otherwise describe the steps>`
+- **Rollback:** `<REVERSIBLE | CONDITIONAL | DESTRUCTIVE>` — see Rollback section below.
 
 ### Verification
 Bulleted, the commands you actually ran and the result (PASS / FAIL / SKIPPED + one-line note). Skip categories that weren't relevant (e.g. no `Migrations` line if the diff touches no schema).
 
-### Launch checklist
-A checkbox list of every action a human or operator must take, at or after merge, to actually ship this change. Each item: the action, when it must happen (**before merge** / **after merge**), and where (target system, file, dashboard). The rollback line is always the last item.
+### Rollback
+Classify the change's rollback as exactly one of **REVERSIBLE**, **CONDITIONAL**, or **DESTRUCTIVE**, then provide instructions matching the classification. Be honest — if data could be lost on revert, do **not** classify as REVERSIBLE.
 
-Example shape:
+- **REVERSIBLE** — undoing the change requires reverting the merge commit and nothing else (pure code, no data side effects, no consumer contracts broken). State the revert command and any incidental cleanup (cache flush, restart). One-paragraph max.
+
+- **CONDITIONAL** — reversible only under specific preconditions (e.g. "only safe before any user writes data to the new schema", "must roll back consumer service X first"). Enumerate (a) the preconditions and (b) the step-by-step procedure. State a clear cutoff after which rollback is no longer possible without data loss.
+
+- **DESTRUCTIVE** — cannot be fully reversed. Lead with `⚠️ Rollback is not possible.` Then enumerate:
+  - **Lost state:** what becomes permanently unrecoverable on revert or by any other means (dropped columns, hard-deleted rows, irreversible schema changes, etc.).
+  - **Partial recovery:** any backups, snapshots, audit logs, or replay mechanisms that could recover *some* state, and the exact procedure to invoke them.
+  - **Pre-merge mitigation:** what's already done to make this safe enough to ship despite irreversibility (dry-run on a prod-like dataset, snapshot taken immediately before the merge, dual-write window, etc.). If no such mitigation exists, say so explicitly — that itself is a flag for the human.
+
+When in doubt between REVERSIBLE and CONDITIONAL, pick CONDITIONAL. When in doubt between CONDITIONAL and DESTRUCTIVE, pick DESTRUCTIVE.
+
+### Launch checklist
+A checkbox list of every action a human or operator must take, at or after merge, to actually ship this change. Each item: the action, when it must happen (**before merge** / **after merge**), and where (target system, file, dashboard). The rollback item is always last and must match the classification from the Rollback section above.
+
+Example shape (REVERSIBLE):
 - [ ] **Before merge:** add `STRIPE_SECRET_KEY` to the production env (Vercel → Project Settings → Environment Variables).
 - [ ] **After merge:** run `npm run db:migrate` against production.
 - [ ] **After merge:** flip the `new-signup` flag to enabled in LaunchDarkly.
-- [ ] **Rollback:** revert the merge commit; no data migration to reverse.
+- [ ] **Rollback (REVERSIBLE):** revert the merge commit.
 
-If the change is pure code with no operator action, the section is exactly one item:
-- [ ] **Rollback:** revert the merge commit.
+DESTRUCTIVE shape — the rollback item is an acknowledgement gate, not an action:
+- [ ] **After merge:** run `npm run db:migrate` against production.
+- [ ] ⚠️ **Rollback (DESTRUCTIVE) — not possible.** Confirm you have read the Rollback section above and accept that <one-line of what is lost> cannot be undone.
+
+CONDITIONAL shape:
+- [ ] **Rollback (CONDITIONAL):** see Rollback section above; rolling back is only safe before <cutoff condition>.
+
+If the change is pure code with no operator action, the section is exactly one item: `- [ ] **Rollback (REVERSIBLE):** revert the merge commit.`
 
 The PR agent will lift this section directly into the pull-request body, so write it for the operator who will actually do the work, not for yourself.
 
