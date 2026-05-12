@@ -108,5 +108,8 @@ jobs:
             gh issue comment "$ISSUE" --body "⚠️ PR agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.${NL}${COST_BLOCK}"
             exit 1
           fi
-          gh issue edit "$ISSUE" --add-label "claude:awaiting-approval"
-          gh issue comment "$ISSUE" --body "⏸ Pull request open: ${PR_URL}${NL}Pipeline complete. Review and merge the PR when ready, then close this issue. No further automation will run on this issue.${NL}${COST_BLOCK}"
+          # No claude:awaiting-approval here — at PR stage the human's action is
+          # "merge the PR on GitHub," which the workflow has no label-event for.
+          # Adding the label would imply a label toggle would advance things; it
+          # wouldn't (nothing listens), and the previous behaviour confused users.
+          gh issue comment "$ISSUE" --body "🚦 Pull request open: ${PR_URL}${NL}Pipeline complete through PR. Review and merge the PR when ready, then close this issue. No further automation will run on this issue until the new post-merge stages (Deploy / Production review) are built.${NL}${COST_BLOCK}"
