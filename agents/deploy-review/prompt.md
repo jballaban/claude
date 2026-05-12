@@ -33,7 +33,33 @@ Bulleted. Each bullet leads with the category, then the finding:
 - **Rollback:** `<REVERSIBLE | CONDITIONAL | DESTRUCTIVE>` — see Rollback section below.
 
 ### Verification
-Bulleted, the commands you actually ran and the result (PASS / FAIL / SKIPPED + one-line note). Skip categories that weren't relevant (e.g. no `Migrations` line if the diff touches no schema).
+
+**Outcome:** one line — `**All verification passed.**` on full success, or `**<N> failed — <one-line top cause>**` on any failure.
+
+**Kinds of verification performed:** 2–5 bullets describing the **categories** of pre-merge checking you actually did — not the commands. A reader should see at a glance what *shape* of deploy-readiness work happened.
+
+Examples of well-shaped category bullets:
+- "Confirmed no dependency or infra drift outside `website/` (compared `package*.json`, `prisma/`, `sst.config.ts`, `backend/` against `main`)."
+- "Production build verified (Next.js build exits clean, bundle size within budget)."
+- "Migration dry-run against a local snapshot — schema applies cleanly and is reversible."
+- "Static-site build skipped — this change has no build step; assets uploaded as-is."
+
+Skip categories that weren't relevant. Don't fabricate categories to look thorough.
+
+Then, only on failure, 3–10 lines of the actual failure output that show the cause. Fenced code block.
+
+Finally, exact commands and per-check PASS/FAIL go inside a `<details>` accordion — present for audit, hidden by default:
+
+```
+<details>
+<summary>Verification commands and per-check results</summary>
+
+- ✅ `<exact command>` — PASS (one-line note)
+- ❌ `<exact command>` — FAIL: <one-line cause>
+- ⏭ `<exact command>` — SKIPPED (why)
+
+</details>
+```
 
 ### Rollback
 Classify the change's rollback as exactly one of **REVERSIBLE**, **CONDITIONAL**, or **DESTRUCTIVE**, then provide instructions matching the classification. Be honest — if data could be lost on revert, do **not** classify as REVERSIBLE.
