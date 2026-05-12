@@ -148,6 +148,38 @@ jobs:
     secrets:
       CLAUDE_PIPELINE_PAT: ${{ secrets.CLAUDE_PIPELINE_PAT }}
 
+  deploy-decide:
+    # Handles human verdict on the manual Deploy stage:
+    #   - success  = claude:awaiting-approval removed → deployment complete; clear stage:deploy
+    #   - failure  = claude:rejected applied → deployment rejected; clear stage:deploy and
+    #               post recovery instructions. (Auto-revert of main and auto-bounce to Plan
+    #               are designed in CLAUDE.md/PIPELINE.md but not yet wired up; for now the
+    #               human rolls back manually and re-enrolls the issue with claude:work-this.)
+    if: >-
+      contains(github.event.issue.labels.*.name, 'stage:deploy') && (
+        (github.event.action == 'unlabeled' && github.event.label.name == 'claude:awaiting-approval') ||
+        (github.event.action == 'labeled' && github.event.label.name == 'claude:rejected')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.CLAUDE_PIPELINE_PAT }}
+      GH_REPO: ${{ github.repository }}
+      ISSUE: ${{ github.event.issue.number }}
+    steps:
+      - name: Route success or failure
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event.action }}" == "unlabeled" ]]; then
+            gh issue edit "$ISSUE" --remove-label "stage:deploy"
+            gh issue comment "$ISSUE" --body "✅ **Deployment complete.** The pipeline run is done. Close this issue manually when you're satisfied — closure is intentionally a human action."
+          else
+            # Drop all stage / approval / rejection labels so the issue ends in a clean state.
+            gh issue edit "$ISSUE" --remove-label "claude:awaiting-approval" --remove-label "claude:rejected" --remove-label "stage:deploy"
+            gh issue comment "$ISSUE" --body "❌ **Deployment rejected.** Roll back production manually using the Rollback steps in the prior comment. Once production is stable, re-enroll the issue by applying \`claude:work-this\` — Triage will re-run with the prod-failure context, and a revised Plan can take another pass. (Auto-revert of \`main\` and auto-bounce to Plan are designed in CLAUDE.md/PIPELINE.md but not yet wired up.)"
+          fi
+
   plan-decide:
     # Handles human verdict on a Plan-stage approval gate:
     #   - approval = claude:awaiting-approval removed → advance to stage:dev
