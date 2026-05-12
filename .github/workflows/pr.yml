@@ -85,17 +85,32 @@ jobs:
             --allowedTools "Bash,Read,Glob,Grep,Write"
             --json-schema '{"type":"object","properties":{"decision":{"type":"string","enum":["DONE"]},"summary":{"type":"string"}},"required":["decision","summary"]}'
 
+      - name: Compute cost summary
+        id: cost
+        working-directory: __workflow
+        run: |
+          {
+            echo 'block<<EOF_BLOCK'
+            bash scripts/cost-summary.sh "${{ steps.agent.outputs.execution_file }}"
+            echo 'EOF_BLOCK'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Hand off to human reviewer
         env:
           DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
           PR_URL: ${{ fromJSON(steps.agent.outputs.structured_output).summary }}
+          COST_BLOCK: ${{ steps.cost.outputs.block }}
         run: |
           set -euo pipefail
           if [[ "$DECISION" != "DONE" ]]; then
-            gh issue comment "$ISSUE" --body "⚠️ PR agent returned an unexpected decision: \`$DECISION\`. Pipeline halted."
+            gh issue comment "$ISSUE" --body "⚠️ PR agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.
+
+$COST_BLOCK"
             exit 1
           fi
           gh issue edit "$ISSUE" --add-label "claude:awaiting-approval"
           gh issue comment "$ISSUE" --body "⏸ Pull request open: ${PR_URL}
 
-Pipeline complete. Review and merge the PR when ready, then close this issue. No further automation will run on this issue."
+Pipeline complete. Review and merge the PR when ready, then close this issue. No further automation will run on this issue.
+
+$COST_BLOCK"

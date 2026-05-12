@@ -84,23 +84,38 @@ jobs:
             --allowedTools "Bash,Read,Glob,Grep,Write"
             --json-schema '{"type":"object","properties":{"decision":{"type":"string","enum":["DONE","BOUNCE"]},"summary":{"type":"string"},"bounce_reason":{"type":"string"}},"required":["decision"]}'
 
+      - name: Compute cost summary
+        id: cost
+        working-directory: __workflow
+        run: |
+          {
+            echo 'block<<EOF_BLOCK'
+            bash scripts/cost-summary.sh "${{ steps.agent.outputs.execution_file }}"
+            echo 'EOF_BLOCK'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Route on decision
         working-directory: __workflow
         env:
           DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
           BOUNCE_REASON: ${{ fromJSON(steps.agent.outputs.structured_output).bounce_reason }}
+          COST_BLOCK: ${{ steps.cost.outputs.block }}
         run: |
           set -euo pipefail
           case "$DECISION" in
             DONE)
               gh issue edit "$ISSUE" --remove-label "stage:deploy-review" --add-label "stage:pr"
-              gh issue comment "$ISSUE" --body "✅ Deploy review passed → advancing to **PR**."
+              gh issue comment "$ISSUE" --body "✅ Deploy review passed → advancing to **PR**.
+
+$COST_BLOCK"
               ;;
             BOUNCE)
               bash scripts/bounce.sh "deploy-review-dev" "stage:deploy-review" "stage:dev" "$BOUNCE_REASON"
               ;;
             *)
-              gh issue comment "$ISSUE" --body "⚠️ Deploy review agent returned an unexpected decision: \`$DECISION\`. Pipeline halted."
+              gh issue comment "$ISSUE" --body "⚠️ Deploy review agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.
+
+$COST_BLOCK"
               exit 1
               ;;
           esac

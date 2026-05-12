@@ -72,26 +72,45 @@ jobs:
             --allowedTools "Bash,Read,Glob,Grep,Write"
             --json-schema '{"type":"object","properties":{"decision":{"type":"string","enum":["READY","ASK","SPLIT"]},"summary":{"type":"string"}},"required":["decision"]}'
 
+      - name: Compute cost summary
+        id: cost
+        working-directory: __workflow
+        run: |
+          {
+            echo 'block<<EOF_BLOCK'
+            bash scripts/cost-summary.sh "${{ steps.agent.outputs.execution_file }}"
+            echo 'EOF_BLOCK'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Route on decision
         env:
           DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
+          COST_BLOCK: ${{ steps.cost.outputs.block }}
         run: |
           set -euo pipefail
           case "$DECISION" in
             READY)
               gh issue edit "$ISSUE" --remove-label "stage:triage" --add-label "stage:plan"
-              gh issue comment "$ISSUE" --body "✅ Triage complete → advancing to **Plan**."
+              gh issue comment "$ISSUE" --body "✅ Triage complete → advancing to **Plan**.
+
+$COST_BLOCK"
               ;;
             ASK)
               gh issue edit "$ISSUE" --add-label "claude:awaiting-approval"
-              gh issue comment "$ISSUE" --body "⏸ Awaiting your answers above. Remove the \`claude:awaiting-approval\` label after you've answered, and Triage will re-run."
+              gh issue comment "$ISSUE" --body "⏸ Awaiting your answers above. Remove the \`claude:awaiting-approval\` label after you've answered, and Triage will re-run.
+
+$COST_BLOCK"
               ;;
             SPLIT)
               gh issue edit "$ISSUE" --add-label "claude:awaiting-approval"
-              gh issue comment "$ISSUE" --body "✂️ This issue is too large. File the proposed child issues, then remove \`claude:awaiting-approval\` to proceed."
+              gh issue comment "$ISSUE" --body "✂️ This issue is too large. File the proposed child issues, then remove \`claude:awaiting-approval\` to proceed.
+
+$COST_BLOCK"
               ;;
             *)
-              gh issue comment "$ISSUE" --body "⚠️ Triage agent returned an unexpected decision: \`$DECISION\`. Pipeline halted."
+              gh issue comment "$ISSUE" --body "⚠️ Triage agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.
+
+$COST_BLOCK"
               exit 1
               ;;
           esac

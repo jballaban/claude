@@ -85,7 +85,6 @@ The schema is owned by this repo; consuming repos just fill it in.
 Decide before — or as part of — the first implementation. Do not silently pick a default.
 
 1. **Permissions**: scope the Action's GitHub token (repo write, project write, deploy creds) before building anything that needs them.
-2. **Cost ceiling**: per-issue token budget before the workflow halts and pings a human.
 
 ### Locked-in decisions (do not re-litigate without explicit reason)
 
@@ -102,6 +101,7 @@ Decide before — or as part of — the first implementation. Do not silently pi
 - Plan approval policy: **every** Plan PROCEED gates on human approval; there is no "fast path" flag.
 - Chaining auth: stage-to-stage label transitions are performed by a fine-grained PAT (`CLAUDE_PIPELINE_PAT`), not the workflow's default `GITHUB_TOKEN`. GitHub deliberately suppresses workflow runs triggered by `GITHUB_TOKEN`-driven events to prevent recursion, which would silently break the entire chain after Triage.
 - PR rejection: closing a PR without merging is a manual operation. The pipeline does not auto-recover; the human re-enrolls the issue (e.g. by applying `claude:work-this` again) if they want another pass.
+- Cost visibility: every stage's transition comment ends with `💰 Cost: $X (this run) | $Y (issue total)` and an HTML-comment marker the next stage uses to compute the running total. No hard budget cap — the 3-bounce limit per stage-pair bounds the worst-case spend, and the visible total lets a human notice if a workflow is misbehaving.
 - Audit log: every state change emits a short auto-written issue comment.
 - Labels are self-healing: `scripts/ensure-labels.sh` runs at the start of every stage workflow and creates missing labels from `config/labels.json`.
 

@@ -39,12 +39,17 @@ NEW_LABEL="bounce:$PAIR:$N"
 gh label create "$NEW_LABEL" --color "ededed" --description "Bounce counter (auto-managed)" 2>/dev/null || true
 gh issue edit "$ISSUE" --add-label "$NEW_LABEL"
 
+COST_SUFFIX=""
+if [[ -n "${COST_BLOCK:-}" ]]; then
+  COST_SUFFIX=$'\n\n'"$COST_BLOCK"
+fi
+
 if [[ "$N" -ge "$LIMIT" ]]; then
   gh issue edit "$ISSUE" --remove-label "$FROM_STAGE" --add-label "claude:awaiting-approval"
   gh issue comment "$ISSUE" --body "🛑 Halted: bounced $N times between \`$FROM_STAGE\` and \`$TO_STAGE\`. Human intervention required. Reason on last bounce: $REASON
 
-To resume after fixing the underlying issue, remove the \`$NEW_LABEL\` label, apply the appropriate stage label manually, and remove \`claude:awaiting-approval\`."
+To resume after fixing the underlying issue, remove the \`$NEW_LABEL\` label, apply the appropriate stage label manually, and remove \`claude:awaiting-approval\`.${COST_SUFFIX}"
 else
   gh issue edit "$ISSUE" --remove-label "$FROM_STAGE" --add-label "$TO_STAGE"
-  gh issue comment "$ISSUE" --body "↩️ Bouncing to \`$TO_STAGE\` ($N/$LIMIT): $REASON"
+  gh issue comment "$ISSUE" --body "↩️ Bouncing to \`$TO_STAGE\` ($N/$LIMIT): $REASON${COST_SUFFIX}"
 fi

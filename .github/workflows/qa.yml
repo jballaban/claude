@@ -80,23 +80,38 @@ jobs:
             --allowedTools "Bash,Read,Glob,Grep,Write"
             --json-schema '{"type":"object","properties":{"decision":{"type":"string","enum":["DONE","BOUNCE"]},"summary":{"type":"string"},"bounce_reason":{"type":"string"}},"required":["decision"]}'
 
+      - name: Compute cost summary
+        id: cost
+        working-directory: __workflow
+        run: |
+          {
+            echo 'block<<EOF_BLOCK'
+            bash scripts/cost-summary.sh "${{ steps.agent.outputs.execution_file }}"
+            echo 'EOF_BLOCK'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Route on decision
         working-directory: __workflow
         env:
           DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
           BOUNCE_REASON: ${{ fromJSON(steps.agent.outputs.structured_output).bounce_reason }}
+          COST_BLOCK: ${{ steps.cost.outputs.block }}
         run: |
           set -euo pipefail
           case "$DECISION" in
             DONE)
               gh issue edit "$ISSUE" --remove-label "stage:qa" --add-label "stage:deploy-review"
-              gh issue comment "$ISSUE" --body "✅ QA passed → advancing to **Deploy review**."
+              gh issue comment "$ISSUE" --body "✅ QA passed → advancing to **Deploy review**.
+
+$COST_BLOCK"
               ;;
             BOUNCE)
               bash scripts/bounce.sh "qa-dev" "stage:qa" "stage:dev" "$BOUNCE_REASON"
               ;;
             *)
-              gh issue comment "$ISSUE" --body "⚠️ QA agent returned an unexpected decision: \`$DECISION\`. Pipeline halted."
+              gh issue comment "$ISSUE" --body "⚠️ QA agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.
+
+$COST_BLOCK"
               exit 1
               ;;
           esac
