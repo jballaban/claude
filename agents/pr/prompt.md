@@ -13,7 +13,7 @@ You will be given an issue number and the name of the working branch you are che
    - Triage's `## Scope understanding`
    - Plan's `## Approach` and `## Changes`
    - QA's `### Test results`
-   - Deploy review's `### Readiness check`
+   - Deploy review's `### Readiness check` and `### Launch checklist`
 2. **Survey the diff.** `git log origin/main..HEAD --oneline` and `git diff --stat origin/main...HEAD` so the body matches what's actually in the branch.
 3. **Compose the PR body.** Format below.
 4. **Open the PR.** Write the body to a tempfile, then:
@@ -38,14 +38,16 @@ Use exactly these sections, in this order. No preamble.
 ### Summary
 1-2 sentences: what this PR does and why. Take this from Triage's Scope understanding plus Plan's Approach — but rewrite, don't paste.
 
+### Launch checklist
+Copy Deploy review's `### Launch checklist` section verbatim — the checkboxes, the **before merge** / **after merge** / **Rollback** labels, the targets. Do not summarise or reword. This is the operator's punch list and it must be unambiguous and identical to the one already verified in Deploy review.
+
+If Deploy review's Launch checklist contains only the Rollback line, copy it as-is — that signals a pure code change with no operator action required.
+
 ### Changes
 The bullets from Plan's `## Changes` section, condensed. Trim verbose file paths; group by area if it helps. A reviewer should be able to skim this and know what to look for in the diff.
 
 ### Verification
 The PASS/FAIL items from QA's `### Test results`, condensed to a few bullets. If everything passed, one line is fine: "All tests in the Plan's Test plan pass — see issue #<N> for QA results."
-
-### Deploy notes
-The non-`None` bullets from Deploy review's `### Readiness check`. If everything was `None` / trivial, write "Trivial — no migrations, env-var changes, or breaking changes." and stop.
 
 ### Closes
 A single line: `Closes #<N>` (or `Refs #<N>` if the issue covers more work than this PR delivers — uncommon).

@@ -31,6 +31,20 @@ Bulleted. Each bullet leads with the category, then the finding:
 ### Verification
 Bulleted, the commands you actually ran and the result (PASS / FAIL / SKIPPED + one-line note). Skip categories that weren't relevant (e.g. no `Migrations` line if the diff touches no schema).
 
+### Launch checklist
+A checkbox list of every action a human or operator must take, at or after merge, to actually ship this change. Each item: the action, when it must happen (**before merge** / **after merge**), and where (target system, file, dashboard). The rollback line is always the last item.
+
+Example shape:
+- [ ] **Before merge:** add `STRIPE_SECRET_KEY` to the production env (Vercel → Project Settings → Environment Variables).
+- [ ] **After merge:** run `npm run db:migrate` against production.
+- [ ] **After merge:** flip the `new-signup` flag to enabled in LaunchDarkly.
+- [ ] **Rollback:** revert the merge commit; no data migration to reverse.
+
+If the change is pure code with no operator action, the section is exactly one item:
+- [ ] **Rollback:** revert the merge commit.
+
+The PR agent will lift this section directly into the pull-request body, so write it for the operator who will actually do the work, not for yourself.
+
 ### Gaps
 Only include this section on `BOUNCE`. Bulleted list of what's missing or wrong, specific enough that Dev knows what to add. Skip the section on `DONE`.
 
