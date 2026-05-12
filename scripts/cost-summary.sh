@@ -33,8 +33,13 @@ PRIOR_TOTAL="${PRIOR_TOTAL:-0}"
 
 TOTAL=$(awk -v a="$RUN_COST" -v b="$PRIOR_TOTAL" 'BEGIN { printf "%.4f", a+b }')
 
+# Display values: round to 2 decimals for the human-readable block.
+# The marker keeps 4-decimal precision so repeated accumulation doesn't drift.
+RUN_DISPLAY=$(awk -v c="$RUN_COST" 'BEGIN { printf "%.2f", c }')
+TOTAL_DISPLAY=$(awk -v c="$TOTAL" 'BEGIN { printf "%.2f", c }')
+
 BLOCK=$(cat <<EOF
-💰 Cost: \$${RUN_COST} (this run) | \$${TOTAL} (issue total)
+💰 Cost: \$${RUN_DISPLAY} (this run) | \$${TOTAL_DISPLAY} (issue total)
 <!-- claude-cost: ${TOTAL} -->
 EOF
 )
