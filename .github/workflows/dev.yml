@@ -90,12 +90,7 @@ jobs:
       - name: Compute cost summary
         id: cost
         working-directory: __workflow
-        run: |
-          {
-            echo 'block<<EOF_BLOCK'
-            bash scripts/cost-summary.sh "${{ steps.agent.outputs.execution_file }}"
-            echo 'EOF_BLOCK'
-          } >> "$GITHUB_OUTPUT"
+        run: bash scripts/cost-summary.sh "${{ steps.agent.outputs.execution_file }}"
 
       - name: Route on decision
         working-directory: __workflow

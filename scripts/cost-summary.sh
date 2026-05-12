@@ -11,8 +11,9 @@
 #
 # Usage:   scripts/cost-summary.sh <execution-file>
 # Env:     ISSUE, GH_TOKEN, GH_REPO required.
-# Stdout:  multi-line cost summary to splice into a transition comment.
-# Outputs: writes run= and total= to $GITHUB_OUTPUT if set.
+# Stdout:  multi-line cost summary (for log readability).
+# Outputs: writes `block`, `run`, and `total` to $GITHUB_OUTPUT if set.
+#          `block` is the same multi-line cost summary printed to stdout.
 
 set -euo pipefail
 
@@ -32,13 +33,19 @@ PRIOR_TOTAL="${PRIOR_TOTAL:-0}"
 
 TOTAL=$(awk -v a="$RUN_COST" -v b="$PRIOR_TOTAL" 'BEGIN { printf "%.4f", a+b }')
 
-cat <<EOF
+BLOCK=$(cat <<EOF
 💰 Cost: \$${RUN_COST} (this run) | \$${TOTAL} (issue total)
 <!-- claude-cost: ${TOTAL} -->
 EOF
+)
+
+echo "$BLOCK"
 
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
   {
+    echo "block<<EOF_COST_BLOCK"
+    echo "$BLOCK"
+    echo "EOF_COST_BLOCK"
     echo "run=$RUN_COST"
     echo "total=$TOTAL"
   } >> "$GITHUB_OUTPUT"
