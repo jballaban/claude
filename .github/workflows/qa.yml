@@ -98,20 +98,17 @@ jobs:
           COST_BLOCK: ${{ steps.cost.outputs.block }}
         run: |
           set -euo pipefail
+          NL=$'\n\n'
           case "$DECISION" in
             DONE)
               gh issue edit "$ISSUE" --remove-label "stage:qa" --add-label "stage:deploy-review"
-              gh issue comment "$ISSUE" --body "✅ QA passed → advancing to **Deploy review**.
-
-$COST_BLOCK"
+              gh issue comment "$ISSUE" --body "✅ QA passed → advancing to **Deploy review**.${NL}${COST_BLOCK}"
               ;;
             BOUNCE)
               bash scripts/bounce.sh "qa-dev" "stage:qa" "stage:dev" "$BOUNCE_REASON"
               ;;
             *)
-              gh issue comment "$ISSUE" --body "⚠️ QA agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.
-
-$COST_BLOCK"
+              gh issue comment "$ISSUE" --body "⚠️ QA agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.${NL}${COST_BLOCK}"
               exit 1
               ;;
           esac

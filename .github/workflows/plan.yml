@@ -81,20 +81,17 @@ jobs:
           COST_BLOCK: ${{ steps.cost.outputs.block }}
         run: |
           set -euo pipefail
+          NL=$'\n\n'
           case "$DECISION" in
             PROCEED)
               gh issue edit "$ISSUE" --add-label "claude:awaiting-approval"
-              gh issue comment "$ISSUE" --body "⏸ Plan ready for review. Remove the \`claude:awaiting-approval\` label to approve and advance to **Development**, or apply \`claude:rejected\` to send it back to Triage.
-
-$COST_BLOCK"
+              gh issue comment "$ISSUE" --body "⏸ Plan ready for review. Remove the \`claude:awaiting-approval\` label to approve and advance to **Development**, or apply \`claude:rejected\` to send it back to Triage.${NL}${COST_BLOCK}"
               ;;
             BOUNCE)
               bash scripts/bounce.sh "plan-triage" "stage:plan" "stage:triage" "$BOUNCE_REASON"
               ;;
             *)
-              gh issue comment "$ISSUE" --body "⚠️ Plan agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.
-
-$COST_BLOCK"
+              gh issue comment "$ISSUE" --body "⚠️ Plan agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.${NL}${COST_BLOCK}"
               exit 1
               ;;
           esac

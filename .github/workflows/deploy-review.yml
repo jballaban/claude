@@ -102,20 +102,17 @@ jobs:
           COST_BLOCK: ${{ steps.cost.outputs.block }}
         run: |
           set -euo pipefail
+          NL=$'\n\n'
           case "$DECISION" in
             DONE)
               gh issue edit "$ISSUE" --remove-label "stage:deploy-review" --add-label "stage:pr"
-              gh issue comment "$ISSUE" --body "✅ Deploy review passed → advancing to **PR**.
-
-$COST_BLOCK"
+              gh issue comment "$ISSUE" --body "✅ Deploy review passed → advancing to **PR**.${NL}${COST_BLOCK}"
               ;;
             BOUNCE)
               bash scripts/bounce.sh "deploy-review-dev" "stage:deploy-review" "stage:dev" "$BOUNCE_REASON"
               ;;
             *)
-              gh issue comment "$ISSUE" --body "⚠️ Deploy review agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.
-
-$COST_BLOCK"
+              gh issue comment "$ISSUE" --body "⚠️ Deploy review agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.${NL}${COST_BLOCK}"
               exit 1
               ;;
           esac

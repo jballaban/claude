@@ -102,15 +102,10 @@ jobs:
           COST_BLOCK: ${{ steps.cost.outputs.block }}
         run: |
           set -euo pipefail
+          NL=$'\n\n'
           if [[ "$DECISION" != "DONE" ]]; then
-            gh issue comment "$ISSUE" --body "⚠️ PR agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.
-
-$COST_BLOCK"
+            gh issue comment "$ISSUE" --body "⚠️ PR agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.${NL}${COST_BLOCK}"
             exit 1
           fi
           gh issue edit "$ISSUE" --add-label "claude:awaiting-approval"
-          gh issue comment "$ISSUE" --body "⏸ Pull request open: ${PR_URL}
-
-Pipeline complete. Review and merge the PR when ready, then close this issue. No further automation will run on this issue.
-
-$COST_BLOCK"
+          gh issue comment "$ISSUE" --body "⏸ Pull request open: ${PR_URL}${NL}Pipeline complete. Review and merge the PR when ready, then close this issue. No further automation will run on this issue.${NL}${COST_BLOCK}"
