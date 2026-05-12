@@ -25,6 +25,12 @@ jobs:
       (github.event.action == 'labeled' && github.event.label.name == 'stage:triage') ||
       (github.event.action == 'unlabeled' && github.event.label.name == 'claude:awaiting-approval' &&
        contains(github.event.issue.labels.*.name, 'stage:triage'))
+    # Required when the repo's default workflow-token permission is read-only.
+    # Reusable workflows inherit the caller's permissions, so we must grant
+    # issues:write here even though triage.yml also declares it.
+    permissions:
+      issues: write
+      contents: read
     uses: jballaban/claude/.github/workflows/triage.yml@main
     with:
       issue_number: ${{ github.event.issue.number }}
