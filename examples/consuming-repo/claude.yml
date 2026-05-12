@@ -141,6 +141,9 @@ jobs:
       # Use the PAT so the stage:dev / stage:triage label we apply here fires
       # the next stage's workflow. GITHUB_TOKEN-driven label events do not.
       GH_TOKEN: ${{ secrets.CLAUDE_PIPELINE_PAT }}
+      # GH_REPO is required because this job doesn't check out the repo, so gh
+      # has no local git remote to infer the target repo from.
+      GH_REPO: ${{ github.repository }}
       ISSUE: ${{ github.event.issue.number }}
     steps:
       - name: Route approval or rejection
