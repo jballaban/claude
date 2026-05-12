@@ -29,6 +29,9 @@ jobs:
       GH_REPO: ${{ github.repository }}
       ISSUE: ${{ inputs.issue_number }}
     steps:
+      - name: Checkout consuming repo
+        uses: actions/checkout@v4
+
       - name: Checkout workflow template
         uses: actions/checkout@v4
         with:
