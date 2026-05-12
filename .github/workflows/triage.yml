@@ -50,6 +50,13 @@ jobs:
         run: bash scripts/ensure-labels.sh config/labels.json
 
       - name: Normalize labels (consume claude:work-this on initial entry)
+        env:
+          # Override the job-level PAT with GITHUB_TOKEN for this step only.
+          # We're setting stage:triage as state, not as a trigger — and the PAT
+          # would re-fire this same workflow because the consuming repo listens
+          # on `labeled stage:triage`. GITHUB_TOKEN-driven label events are
+          # deliberately suppressed by GitHub, so this avoids the recursion.
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           LABELS=$(gh issue view "$ISSUE" --json labels --jq '[.labels[].name] | join(",")')
