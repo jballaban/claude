@@ -63,6 +63,7 @@ jobs:
             Post your analysis as a comment on that issue, then return your decision via structured output.
           claude_args: |
             --model ${{ inputs.model }}
+            --allowedTools "Bash,Read,Glob,Grep,Write"
             --json-schema '{"type":"object","properties":{"decision":{"type":"string","enum":["READY","ASK","SPLIT"]},"summary":{"type":"string"}},"required":["decision"]}'
 
       - name: Route on decision
