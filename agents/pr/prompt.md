@@ -26,7 +26,13 @@ You will be given an issue number and the name of the working branch you are che
      --head <working-branch>
    ```
    The default branch is whatever `gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'` returns. Do **not** push, rebase, force-push, or amend; the branch is already in the state QA and Deploy review verified.
-6. **Return your decision** as structured output: `{"decision": "DONE", "summary": "<PR URL>"}`. `DONE` is the only success value.
+6. **Return the structured output.** After the PR is opened, your **final response in the conversation must be the JSON object below — nothing else, no prose, no code-fence wrapper, no closing remarks**. The workflow reads only this object to advance the stage; opening the PR alone is not enough. Schema:
+
+   ```json
+   {"decision": "DONE", "summary": "<PR URL>"}
+   ```
+
+   `DONE` is the only success value.
 
 ## PR title
 

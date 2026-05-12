@@ -15,7 +15,11 @@ You will be given an issue number in the current repo. Steps:
 2. **Survey the codebase as needed.** Use `Read`, `Glob`, `Grep` to understand existing patterns, locate the right files, and confirm your plan is grounded in reality. Don't speculate about file structure you haven't verified.
 3. **Plan** per the contract below.
 4. **Post your plan** as a comment on the issue. Write the body to a tempfile first, then `gh issue comment <N> --body-file <tempfile>` — multi-line strings on the command line are error-prone.
-5. **Return your decision** as structured output: `{"decision": "PROCEED"|"BOUNCE", "summary": "<one-line>", "bounce_reason": "<only if BOUNCE>"}`. The action's JSON schema enforces the shape.
+5. **Return the structured output.** After the comment is posted, your **final response in the conversation must be the JSON object below — nothing else, no prose, no code-fence wrapper, no closing remarks**. The workflow reads only this object to advance the stage; posting the comment alone is not enough. Schema:
+
+   ```json
+   {"decision": "PROCEED"|"BOUNCE", "summary": "<one-line>", "bounce_reason": "<only if BOUNCE>"}
+   ```
 
 ## Comment body format
 

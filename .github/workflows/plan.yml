@@ -71,8 +71,10 @@ jobs:
       - name: Route on decision
         working-directory: __workflow
         env:
-          DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
-          BOUNCE_REASON: ${{ fromJSON(steps.agent.outputs.structured_output).bounce_reason }}
+          # `|| '{}'` guards against the agent ending without emitting structured output —
+          # without it, fromJSON('') errors at expression-eval time and blocks the step.
+          DECISION: ${{ fromJSON(steps.agent.outputs.structured_output || '{}').decision || '' }}
+          BOUNCE_REASON: ${{ fromJSON(steps.agent.outputs.structured_output || '{}').bounce_reason || '' }}
           COST_BLOCK: ${{ steps.cost.outputs.block }}
         run: |
           set -euo pipefail
@@ -84,6 +86,10 @@ jobs:
               ;;
             BOUNCE)
               bash scripts/bounce.sh "plan-triage" "stage:plan" "stage:triage" "$BOUNCE_REASON"
+              ;;
+            "")
+              gh issue comment "$ISSUE" --body "⚠️ Plan agent finished without returning structured output. The comment above may show what was attempted, but the workflow cannot advance without a decision. Pipeline halted — re-trigger the stage manually to retry.${NL}${COST_BLOCK}"
+              exit 1
               ;;
             *)
               gh issue comment "$ISSUE" --body "⚠️ Plan agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.${NL}${COST_BLOCK}"

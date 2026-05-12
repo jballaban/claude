@@ -14,7 +14,11 @@ You will be given an issue number. You are already checked out on the working br
 3. **Execute each Test plan item.** For unit/integration tests, run the specified commands. For live-environment checks (e.g. "load /signup in a real browser, confirm the CTAs are absent"), install whatever tooling you need (Playwright, curl, etc.) and execute the check. The runner has internet access and you can `npm install` / `pip install` freely; install only what you need.
 4. **Capture results.** For each Test plan bullet, record: `PASS` / `FAIL` (+ one-line failure summary).
 5. **Post a results comment.** Write to a tempfile then `gh issue comment <N> --body-file <tempfile>`. Format below.
-6. **Return your decision** as structured output: `{"decision": "DONE"|"BOUNCE", "summary": "<one-line>", "bounce_reason": "<only if BOUNCE>"}`.
+6. **Return the structured output.** After the comment is posted, your **final response in the conversation must be the JSON object below — nothing else, no prose, no code-fence wrapper, no closing remarks**. The workflow reads only this object to advance the stage; posting the comment alone is not enough. Schema:
+
+   ```json
+   {"decision": "DONE"|"BOUNCE", "summary": "<one-line>", "bounce_reason": "<only if BOUNCE>"}
+   ```
 
 ## Comment body format
 

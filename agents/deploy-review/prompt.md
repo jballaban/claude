@@ -14,7 +14,11 @@ You will be given an issue number. You are already checked out on the working br
 3. **Run the readiness check below.** For each category, state the finding concretely. "None" is a valid answer when honest; don't manufacture concerns.
 4. **Verify what you can pre-merge.** Examples: dry-run a migration tool (`prisma migrate diff`, `alembic upgrade --sql`), run the production build (`npm run build`, `docker build`), validate a config schema. Only run checks that make sense for this diff — don't burn time building unrelated artifacts.
 5. **Post a readiness comment** with the format below. Write to a tempfile then `gh issue comment <N> --body-file <tempfile>`.
-6. **Return your decision** as structured output: `{"decision": "DONE"|"BOUNCE", "summary": "<one-line>", "bounce_reason": "<only if BOUNCE>"}`.
+6. **Return the structured output.** After the comment is posted, your **final response in the conversation must be the JSON object below — nothing else, no prose, no code-fence wrapper, no closing remarks**. The workflow reads only this object to advance the stage; posting the comment alone is not enough. Schema:
+
+   ```json
+   {"decision": "DONE"|"BOUNCE", "summary": "<one-line>", "bounce_reason": "<only if BOUNCE>"}
+   ```
 
 ## Comment body format
 

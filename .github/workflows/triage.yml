@@ -86,7 +86,9 @@ jobs:
 
       - name: Route on decision
         env:
-          DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
+          # `|| '{}'` guards against the agent ending without emitting structured output —
+          # without it, fromJSON('') errors at expression-eval time and blocks the step.
+          DECISION: ${{ fromJSON(steps.agent.outputs.structured_output || '{}').decision || '' }}
           COST_BLOCK: ${{ steps.cost.outputs.block }}
         run: |
           set -euo pipefail
@@ -103,6 +105,10 @@ jobs:
             SPLIT)
               gh issue edit "$ISSUE" --add-label "claude:awaiting-approval"
               gh issue comment "$ISSUE" --body "✂️ This issue is too large. File the proposed child issues, then remove \`claude:awaiting-approval\` to proceed.${NL}${COST_BLOCK}"
+              ;;
+            "")
+              gh issue comment "$ISSUE" --body "⚠️ Triage agent finished without returning structured output. The comment above may show what was attempted, but the workflow cannot advance without a decision. Pipeline halted — re-trigger the stage manually to retry.${NL}${COST_BLOCK}"
+              exit 1
               ;;
             *)
               gh issue comment "$ISSUE" --body "⚠️ Triage agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.${NL}${COST_BLOCK}"

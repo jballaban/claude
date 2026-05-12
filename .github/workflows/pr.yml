@@ -92,12 +92,18 @@ jobs:
 
       - name: Hand off to human reviewer
         env:
-          DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
-          PR_URL: ${{ fromJSON(steps.agent.outputs.structured_output).summary }}
+          # `|| '{}'` guards against the agent ending without emitting structured output —
+          # without it, fromJSON('') errors at expression-eval time and blocks the step.
+          DECISION: ${{ fromJSON(steps.agent.outputs.structured_output || '{}').decision || '' }}
+          PR_URL: ${{ fromJSON(steps.agent.outputs.structured_output || '{}').summary || '' }}
           COST_BLOCK: ${{ steps.cost.outputs.block }}
         run: |
           set -euo pipefail
           NL=$'\n\n'
+          if [[ -z "$DECISION" ]]; then
+            gh issue comment "$ISSUE" --body "⚠️ PR agent finished without returning structured output. A PR may have been opened, but the workflow cannot record it without the structured output. Pipeline halted — re-trigger the stage manually to retry.${NL}${COST_BLOCK}"
+            exit 1
+          fi
           if [[ "$DECISION" != "DONE" ]]; then
             gh issue comment "$ISSUE" --body "⚠️ PR agent returned an unexpected decision: \`$DECISION\`. Pipeline halted.${NL}${COST_BLOCK}"
             exit 1

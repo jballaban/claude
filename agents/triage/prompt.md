@@ -14,7 +14,11 @@ You will be given an issue number in the current repo. Steps:
 1. **Read the issue.** Use `gh issue view <N> --json number,title,body,labels,comments`. Read every comment — earlier Triage runs and Plan-agent kickback comments are critical context.
 2. **Analyze** the issue per the contract below.
 3. **Post your analysis** as a comment on the issue. Write the body to a tempfile first, then `gh issue comment <N> --body-file <tempfile>` — multi-line strings on the command line are error-prone.
-4. **Return your decision** as structured output: `{"decision": "READY"|"ASK"|"SPLIT", "summary": "<one-line>"}`. The action's JSON schema enforces the shape.
+4. **Return the structured output.** After the comment is posted, your **final response in the conversation must be the JSON object below — nothing else, no prose, no code-fence wrapper, no closing remarks**. The workflow reads only this object to advance the stage; posting the comment alone is not enough. Schema:
+
+   ```json
+   {"decision": "READY"|"ASK"|"SPLIT", "summary": "<one-line>"}
+   ```
 
 ## Comment body format
 

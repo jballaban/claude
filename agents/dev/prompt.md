@@ -14,7 +14,11 @@ You will be given an issue number. You are already on the working branch `claude
 3. **Verify locally what you can.** If the repo has obvious test/lint commands (`npm test`, `npm run lint`, `pytest`, `cargo test`), run the ones relevant to your changes and fix what breaks. Don't go on a fixing spree for pre-existing failures unrelated to your work.
 4. **Commit.** One commit per logical change; commit messages should be tight and explain *why*, not *what*. End each commit message with a `Closes #<N>` or `Refs #<N>` trailer.
 5. **Push.** `git push origin HEAD`. The branch is already tracked.
-6. **Return your decision** as structured output: `{"decision": "DONE"|"BOUNCE", "summary": "<one-line>", "bounce_reason": "<only if BOUNCE>"}`.
+6. **Return the structured output.** After the push, your **final response in the conversation must be the JSON object below — nothing else, no prose, no code-fence wrapper, no closing remarks**. The workflow reads only this object to advance the stage; pushing the branch alone is not enough. Schema:
+
+   ```json
+   {"decision": "DONE"|"BOUNCE", "summary": "<one-line>", "bounce_reason": "<only if BOUNCE>"}
+   ```
 
 ## Decision values
 
