@@ -100,6 +100,7 @@ Decide before — or as part of — the first implementation. Do not silently pi
 - Trigger: `claude:work-this` label applied to an issue.
 - Approval gates: workflow adds `claude:awaiting-approval`; human removes it to approve, or applies `claude:rejected` to bounce.
 - Plan approval policy: **every** Plan PROCEED gates on human approval; there is no "fast path" flag.
+- Chaining auth: stage-to-stage label transitions are performed by a fine-grained PAT (`CLAUDE_PIPELINE_PAT`), not the workflow's default `GITHUB_TOKEN`. GitHub deliberately suppresses workflow runs triggered by `GITHUB_TOKEN`-driven events to prevent recursion, which would silently break the entire chain after Triage.
 - Audit log: every state change emits a short auto-written issue comment.
 - Labels are self-healing: `scripts/ensure-labels.sh` runs at the start of every stage workflow and creates missing labels from `config/labels.json`.
 

@@ -16,6 +16,8 @@ on:
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN:
         required: true
+      CLAUDE_PIPELINE_PAT:
+        required: true
 
 jobs:
   triage:
@@ -25,7 +27,11 @@ jobs:
       contents: read
       id-token: write
     env:
-      GH_TOKEN: ${{ github.token }}
+      # Use the PAT (not GITHUB_TOKEN) so label edits we make to advance the
+      # pipeline actually fire downstream workflow runs. Events from
+      # GITHUB_TOKEN-driven API calls are deliberately suppressed by GitHub
+      # to prevent recursion, which would break stage chaining entirely.
+      GH_TOKEN: ${{ secrets.CLAUDE_PIPELINE_PAT }}
       GH_REPO: ${{ github.repository }}
       ISSUE: ${{ inputs.issue_number }}
     steps:

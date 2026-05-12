@@ -17,13 +17,13 @@ See [CLAUDE.md](./CLAUDE.md) for the full design and the locked-in decisions.
 | Stage | Built |
 |---|---|
 | Triage | ✅ |
-| Plan | ⬜ not yet |
-| Development | ⬜ not yet |
-| Verification (QA) | ⬜ not yet |
-| Deployment review | ⬜ not yet |
-| PR / Human review | ⬜ not yet |
+| Plan | ✅ |
+| Development | ✅ |
+| Verification (QA) | ✅ |
+| Deploy review | ✅ |
+| PR / Human review | ✅ |
 
-Today the pipeline only runs the Triage stage. Issues that come out the other side of Triage are parked at `stage:plan` until that workflow exists.
+All six stages are scaffolded.
 
 ## Setup in a consuming repo
 
@@ -38,15 +38,25 @@ claude setup-token
 
 It will open a browser, you sign in, and a token is printed (starts with `sk-ant-oat-…`). This token uses your Claude Code subscription — no separate API key or billing setup is required. It does not expire on a short cycle, so one token covers all your consuming repos.
 
-**2. Add the token as a repo secret.**
-In your GitHub repo: Settings → Secrets and variables → Actions → New repository secret. Name it `CLAUDE_CODE_OAUTH_TOKEN`, paste the token value.
+**2. Create a fine-grained pipeline PAT.**
+GitHub deliberately suppresses workflow runs that would be triggered by the default `GITHUB_TOKEN`, so stage-to-stage label transitions need to be made by a user-owned token. Generate one at github.com/settings/personal-access-tokens → "Generate new fine-grained token":
 
-**3. Add the workflow file.**
-Create `.github/workflows/claude.yml` in your repo with the contents of [`examples/consuming-repo/claude.yml`](./examples/consuming-repo/claude.yml). It's about 20 lines and references this template repo via `uses:`.
+- Resource owner: your user (or the org that owns the consuming repos)
+- Repository access: only the repos you want the pipeline to run on
+- Repository permissions: `Issues: Read and write`, `Contents: Read and write`, `Pull requests: Read and write`, `Metadata: Read-only`
+- Expiration: pick something you'll renew (PATs cannot be no-expiration)
 
-**4. Commit and push.**
+**3. Add both secrets to the repo.**
+Settings → Secrets and variables → Actions → New repository secret:
+- `CLAUDE_CODE_OAUTH_TOKEN` — the OAuth token from step 1
+- `CLAUDE_PIPELINE_PAT` — the PAT from step 2
 
-That's it. Labels are created automatically on the first run — no manual setup. The first time you label an issue with `claude:work-this`, the workflow creates the nine pipeline labels in your repo, then starts Triage.
+**4. Add the workflow file.**
+Create `.github/workflows/claude.yml` in your repo with the contents of [`examples/consuming-repo/claude.yml`](./examples/consuming-repo/claude.yml). It references this template repo via `uses:` and is ~120 lines.
+
+**5. Commit and push.**
+
+Labels are created automatically on the first run — no manual setup. The first time you label an issue with `claude:work-this`, the workflow creates the pipeline labels in your repo, then starts Triage.
 
 ## Using it
 

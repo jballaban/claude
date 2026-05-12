@@ -20,6 +20,8 @@ on:
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN:
         required: true
+      CLAUDE_PIPELINE_PAT:
+        required: true
 
 jobs:
   pr:
@@ -30,7 +32,8 @@ jobs:
       pull-requests: write
       id-token: write
     env:
-      GH_TOKEN: ${{ github.token }}
+      # See triage.yml for why we use the PAT instead of GITHUB_TOKEN.
+      GH_TOKEN: ${{ secrets.CLAUDE_PIPELINE_PAT }}
       GH_REPO: ${{ github.repository }}
       ISSUE: ${{ inputs.issue_number }}
     steps:
