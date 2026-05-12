@@ -53,6 +53,21 @@ jobs:
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
+  dev:
+    # Dev runs when:
+    #   - stage:dev is applied (Plan was approved, or QA bounced back)
+    if: >-
+      github.event.action == 'labeled' && github.event.label.name == 'stage:dev'
+    permissions:
+      issues: write
+      contents: write
+      id-token: write
+    uses: jballaban/claude/.github/workflows/dev.yml@main
+    with:
+      issue_number: ${{ github.event.issue.number }}
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
   plan-decide:
     # Handles human verdict on a Plan-stage approval gate:
     #   - approval = claude:awaiting-approval removed → advance to stage:dev

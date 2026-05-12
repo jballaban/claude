@@ -61,6 +61,7 @@ jobs:
             --json-schema '{"type":"object","properties":{"decision":{"type":"string","enum":["PROCEED","BOUNCE"]},"summary":{"type":"string"},"bounce_reason":{"type":"string"}},"required":["decision"]}'
 
       - name: Route on decision
+        working-directory: __workflow
         env:
           DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
           BOUNCE_REASON: ${{ fromJSON(steps.agent.outputs.structured_output).bounce_reason }}
@@ -72,8 +73,7 @@ jobs:
               gh issue comment "$ISSUE" --body "⏸ Plan ready for review. Remove the \`claude:awaiting-approval\` label to approve and advance to **Development**, or apply \`claude:rejected\` to send it back to Triage."
               ;;
             BOUNCE)
-              gh issue edit "$ISSUE" --remove-label "stage:plan" --add-label "stage:triage"
-              gh issue comment "$ISSUE" --body "↩️ Bouncing back to **Triage**: ${BOUNCE_REASON:-no reason provided}"
+              bash scripts/bounce.sh "plan-triage" "stage:plan" "stage:triage" "$BOUNCE_REASON"
               ;;
             *)
               gh issue comment "$ISSUE" --body "⚠️ Plan agent returned an unexpected decision: \`$DECISION\`. Pipeline halted."

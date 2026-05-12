@@ -1,0 +1,106 @@
+name: Development Stage
+
+# Reusable workflow. Consuming repos call this when an issue enters the Dev
+# stage (Plan was approved). See examples/consuming-repo/claude.yml.
+
+on:
+  workflow_call:
+    inputs:
+      issue_number:
+        type: number
+        required: true
+      model:
+        type: string
+        required: false
+        default: claude-opus-4-7
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN:
+        required: true
+
+jobs:
+  dev:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ISSUE: ${{ inputs.issue_number }}
+    steps:
+      - name: Checkout consuming repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout workflow template
+        uses: actions/checkout@v4
+        with:
+          repository: jballaban/claude
+          ref: main
+          path: __workflow
+
+      - name: Ensure pipeline labels exist
+        working-directory: __workflow
+        run: bash scripts/ensure-labels.sh config/labels.json
+
+      - name: Determine working branch and check out
+        id: branch
+        run: |
+          set -euo pipefail
+          SLUG=$(gh issue view "$ISSUE" --json title --jq '.title' \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//' \
+            | cut -c1-50 \
+            | sed 's/-$//')
+          BRANCH="claude/issue-${ISSUE}-${SLUG}"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code origin "$BRANCH" >/dev/null 2>&1; then
+            echo "Resuming existing branch $BRANCH"
+            git fetch origin "$BRANCH:$BRANCH"
+            git checkout "$BRANCH"
+          else
+            echo "Creating new branch $BRANCH from $(git rev-parse --abbrev-ref HEAD)"
+            git checkout -b "$BRANCH"
+            git push -u origin "$BRANCH"
+          fi
+
+      - name: Announce entry
+        run: gh issue comment "$ISSUE" --body "🛠 Entering **Development** stage on branch \`${{ steps.branch.outputs.branch }}\`."
+
+      - name: Run Dev agent
+        id: agent
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Read and follow the system prompt at `__workflow/agents/dev/prompt.md` exactly.
+            The issue is #${{ inputs.issue_number }} in this repo.
+            You are already checked out on branch `${{ steps.branch.outputs.branch }}`.
+            Implement the approved Plan, commit, push, then return your decision via structured output.
+          claude_args: |
+            --model ${{ inputs.model }}
+            --allowedTools "Bash,Read,Glob,Grep,Write,Edit"
+            --json-schema '{"type":"object","properties":{"decision":{"type":"string","enum":["DONE","BOUNCE"]},"summary":{"type":"string"},"bounce_reason":{"type":"string"}},"required":["decision"]}'
+
+      - name: Route on decision
+        working-directory: __workflow
+        env:
+          DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
+          BOUNCE_REASON: ${{ fromJSON(steps.agent.outputs.structured_output).bounce_reason }}
+        run: |
+          set -euo pipefail
+          case "$DECISION" in
+            DONE)
+              gh issue edit "$ISSUE" --remove-label "stage:dev" --add-label "stage:qa"
+              gh issue comment "$ISSUE" --body "✅ Development complete → advancing to **QA**."
+              ;;
+            BOUNCE)
+              bash scripts/bounce.sh "dev-plan" "stage:dev" "stage:plan" "$BOUNCE_REASON"
+              ;;
+            *)
+              gh issue comment "$ISSUE" --body "⚠️ Dev agent returned an unexpected decision: \`$DECISION\`. Pipeline halted."
+              exit 1
+              ;;
+          esac
