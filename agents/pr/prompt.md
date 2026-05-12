@@ -62,8 +62,8 @@ Copy Deploy review's `### Rollback` section verbatim, including the classificati
 ### Verification
 Prefer one line: `All tests in the Plan's Test plan pass — see issue #<N> for QA results.` Only expand into multiple bullets if there were failures or skipped checks the reviewer should know about.
 
-### Closes
-A single line: `Closes #<N>` (or `Refs #<N>` if the issue covers more work than this PR delivers — uncommon).
+### Issue
+A single line: `Refs #<N>`. **Do not** use `Closes #<N>`, `Fixes #<N>`, `Resolves #<N>`, or any other GitHub auto-close keyword. The pipeline keeps the issue open after merge — it still has Deploy (Stage 7) and Production review (Stage 8) to go through, and the human closes the issue manually at the end, per CLAUDE.md's locked-in issue-closure rule.
 
 ### Audit trail
 A bulleted list of links to the relevant agent comments on the issue, in the order they were posted (Triage → Plan → QA → Deploy review). Use the GitHub comment URL format (`https://github.com/<owner>/<repo>/issues/<N>#issuecomment-<id>`). A reviewer who wants the full history clicks through.
