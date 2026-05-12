@@ -25,6 +25,7 @@ jobs:
       contents: read
     env:
       GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
       ISSUE: ${{ inputs.issue_number }}
     steps:
       - name: Checkout workflow template
