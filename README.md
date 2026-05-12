@@ -8,7 +8,7 @@ When you label an issue with `claude:work-this`, an agent-driven pipeline runs o
 
 **Triage → Plan → Development → Verification → Deployment → PR (human review).**
 
-Each stage's status lives on the issue as labels (`stage:triage`, `stage:plan`, …) and a synced GitHub Project board. Every state change writes a short comment to the issue, so the comment thread is the audit log. The pipeline halts and asks for help if it ping-pongs between two stages three times.
+Each stage's status lives on the issue as labels (`stage:triage`, `stage:plan`, …). Every state change writes a short comment to the issue, so the comment thread is the audit log. The pipeline halts and asks for help if it ping-pongs between two stages three times.
 
 See [CLAUDE.md](./CLAUDE.md) for the full design and the locked-in decisions.
 

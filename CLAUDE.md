@@ -30,7 +30,9 @@ Downstream repos consume the pipeline via `workflow_call`. A consuming repo's `.
 
 ### State, trigger, and audit log
 
-**Issue labels are the canonical state.** The GitHub Project board mirrors labels and is updated by the workflow on every transition. Labels were chosen over Project columns as the source of truth because Projects v2 webhook events fire at the org level (not the repo), which would force every consuming repo into an org-level dispatch setup. Labels are repo-native and make per-project rollout trivial.
+**Issue labels are the canonical state.** Labels were chosen over Project columns as the source of truth because Projects v2 webhook events fire at the org level (not the repo), which would force every consuming repo into an org-level dispatch setup. Labels are repo-native and make per-project rollout trivial.
+
+A GitHub Project board is *intended* to mirror labels and update on every transition, but **this is not yet implemented**. Treat any references to "the Project board" in this doc or README as a deferred design goal until the sync step exists. Until then, labels are the only state surface.
 
 The label vocabulary the workflow owns:
 
@@ -43,7 +45,7 @@ The label vocabulary the workflow owns:
 
 ### Pipeline: linear, six stages
 
-Each stage maps 1:1 to a column on the consuming repo's GitHub Project board, so the board mirrors the canonical label state.
+Each stage is intended to map 1:1 to a column on the consuming repo's GitHub Project board (deferred — see above).
 
 | # | Stage              | Owner         | Exit condition                                                                                  |
 |---|--------------------|---------------|--------------------------------------------------------------------------------------------------|
