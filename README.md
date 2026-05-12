@@ -6,24 +6,26 @@ A template GitHub Actions pipeline that lets Claude take a GitHub issue from tri
 
 When you label an issue with `claude:work-this`, an agent-driven pipeline runs on your repo's GitHub Actions runner:
 
-**Triage → Plan → Development → Verification → Deployment → PR (human review).**
+**Triage → Plan → Dev → QA → Deploy review → PR → Deploy → Production review.**
 
 Each stage's status lives on the issue as labels (`stage:triage`, `stage:plan`, …). Every state change writes a short comment to the issue, so the comment thread is the audit log. The pipeline halts and asks for help if it ping-pongs between two stages three times.
 
-See [CLAUDE.md](./CLAUDE.md) for the full design and the locked-in decisions.
+See [PIPELINE.md](./PIPELINE.md) for stage-by-stage detail, or [CLAUDE.md](./CLAUDE.md) for the full design and locked-in decisions.
 
 ## Status
 
 | Stage | Built |
 |---|---|
-| Triage | ✅ |
-| Plan | ✅ |
-| Development | ✅ |
-| Verification (QA) | ✅ |
-| Deploy review | ✅ |
-| PR / Human review | ✅ |
+| 1. Triage | ✅ |
+| 2. Plan | ✅ |
+| 3. Development | ✅ |
+| 4. Verification (QA) | ✅ |
+| 5. Deploy review | ✅ |
+| 6. PR / Human review | ✅ |
+| 7. Deploy (auto / manual) | 🚧 design |
+| 8. Production review | 🚧 design |
 
-All six stages are scaffolded.
+Stages 1–6 are scaffolded. Stages 7–8 (post-merge deploy + prod verification with tag-gated serialization) are designed in [PIPELINE.md](./PIPELINE.md) and [CLAUDE.md](./CLAUDE.md), pending implementation.
 
 ## Setup in a consuming repo
 
@@ -75,10 +77,13 @@ To reject an agent's output at any stage, apply the `claude:rejected` label.
 | Label | Purpose |
 |---|---|
 | `claude:work-this` | Apply to enroll an issue. Consumed by the workflow on entry. |
-| `stage:triage` / `stage:plan` / `stage:dev` / `stage:qa` / `stage:deploy-review` / `stage:pr` | Current stage. Exactly one is set while the pipeline is running. |
+| `stage:triage` / `stage:plan` / `stage:dev` / `stage:qa` / `stage:deploy-review` / `stage:pr` / `stage:deploy` / `stage:prod-review` / `stage:awaiting-rollback` | Current stage. Exactly one is set while the pipeline is running. |
 | `claude:awaiting-approval` | Pipeline is paused for human input. Remove to advance, or apply `claude:rejected` to reject. |
-| `claude:rejected` | Human rejected the current stage's output. |
-| `bounce:<from>-<to>:<N>` | Bounce counter between two adjacent stages. Created on demand. At `N=3` the pipeline halts and asks for human help. |
+| `claude:rejected` | Human rejected the current stage's output. At Stage 8 this means "reject + manual rollback." |
+| `claude:rejected-auto` | Stage 8 only — reject and trigger Stage 5's auto-rollback procedure. Only available when `rollback:auto-available` is set. |
+| `deploy:auto` / `deploy:manual` / `deploy:none` | Deploy mode for this issue. Picked by the human at Stage 6 (or pre-applied by Stage 5 for doc-only diffs). |
+| `rollback:auto-available` | Set by Stage 5 when it has discovered a viable rollback procedure. Gates `claude:rejected-auto`. |
+| `bounce:<from>-<to>:<N>` | Bounce counter between two stages. Created on demand. At `N=3` the pipeline halts and asks for human help. |
 
 ## Requirements
 
