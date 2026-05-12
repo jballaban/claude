@@ -72,15 +72,9 @@ Every agent posts a **short, relevant comment** to the issue on each transition:
 
 ## Consuming-repo config
 
-Each downstream repo provides a small config (location TBD) declaring:
+There is no consuming-repo config file. Agents discover what they need each run by inspecting the repo (package.json scripts, Makefile, pyproject.toml, etc.) — the Plan agent's Test plan section serves as the per-issue contract for QA, and Deploy review enumerates infra concerns from the diff. If repo-side discovery becomes too brittle on real-world repos, a static config file (`.claude-pipeline.yml` or similar) is the obvious next step, but the design *does not* require one.
 
-- Trigger condition (label-gated, e.g. `claude:work-this`, recommended for safe rollout)
-- Build / lint / test commands
-- Preview-env or browser-test command for QA (stage 4)
-- Deployment context the Deploy agent should consider (infra, migrations, env vars)
-- Which GitHub Project board to drive
-
-The schema is owned by this repo; consuming repos just fill it in.
+The only repo-side configuration that exists today is the consuming-repo's `claude.yml` workflow (which references this template's reusable workflows) and two secrets (`CLAUDE_CODE_OAUTH_TOKEN`, `CLAUDE_PIPELINE_PAT`).
 
 ## Open design questions
 
