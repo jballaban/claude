@@ -84,9 +84,8 @@ The schema is owned by this repo; consuming repos just fill it in.
 
 Decide before — or as part of — the first implementation. Do not silently pick a default.
 
-1. **Plan approval default (stage 2)**: does every plan require a human approval gate, or only plans flagged `requires-approval`? Mechanism is decided (label toggle + auto-comment); default policy is not.
-2. **Permissions**: scope the Action's GitHub token (repo write, project write, deploy creds) before building anything that needs them.
-3. **Cost ceiling**: per-issue token budget before the workflow halts and pings a human.
+1. **Permissions**: scope the Action's GitHub token (repo write, project write, deploy creds) before building anything that needs them.
+2. **Cost ceiling**: per-issue token budget before the workflow halts and pings a human.
 
 ### Locked-in decisions (do not re-litigate without explicit reason)
 
@@ -99,7 +98,8 @@ Decide before — or as part of — the first implementation. Do not silently pi
 - Branching: one branch per ticket (`claude/issue-<N>-<slug>`), persists stages 3–6.
 - State of truth: issue labels. Project board is a synced view.
 - Trigger: `claude:work-this` label applied to an issue.
-- Approval gates: workflow adds `claude:awaiting-approval`; human removes it to approve.
+- Approval gates: workflow adds `claude:awaiting-approval`; human removes it to approve, or applies `claude:rejected` to bounce.
+- Plan approval policy: **every** Plan PROCEED gates on human approval; there is no "fast path" flag.
 - Audit log: every state change emits a short auto-written issue comment.
 - Labels are self-healing: `scripts/ensure-labels.sh` runs at the start of every stage workflow and creates missing labels from `config/labels.json`.
 

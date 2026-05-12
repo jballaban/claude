@@ -1,0 +1,82 @@
+name: Plan Stage
+
+# Reusable workflow. Consuming repos call this when an issue enters the Plan
+# stage (Triage returned READY). See examples/consuming-repo/claude.yml.
+
+on:
+  workflow_call:
+    inputs:
+      issue_number:
+        type: number
+        required: true
+      model:
+        type: string
+        required: false
+        default: claude-opus-4-7
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN:
+        required: true
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ISSUE: ${{ inputs.issue_number }}
+    steps:
+      - name: Checkout consuming repo
+        uses: actions/checkout@v4
+
+      - name: Checkout workflow template
+        uses: actions/checkout@v4
+        with:
+          repository: jballaban/claude
+          ref: main
+          path: __workflow
+
+      - name: Ensure pipeline labels exist
+        working-directory: __workflow
+        run: bash scripts/ensure-labels.sh config/labels.json
+
+      - name: Announce entry
+        run: gh issue comment "$ISSUE" --body "📋 Entering **Plan** stage."
+
+      - name: Run Plan agent
+        id: agent
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Read and follow the system prompt at `__workflow/agents/plan/prompt.md` exactly.
+            The issue to plan is #${{ inputs.issue_number }} in this repo.
+            Post your plan as a comment on that issue, then return your decision via structured output.
+          claude_args: |
+            --model ${{ inputs.model }}
+            --allowedTools "Bash,Read,Glob,Grep,Write"
+            --json-schema '{"type":"object","properties":{"decision":{"type":"string","enum":["PROCEED","BOUNCE"]},"summary":{"type":"string"},"bounce_reason":{"type":"string"}},"required":["decision"]}'
+
+      - name: Route on decision
+        env:
+          DECISION: ${{ fromJSON(steps.agent.outputs.structured_output).decision }}
+          BOUNCE_REASON: ${{ fromJSON(steps.agent.outputs.structured_output).bounce_reason }}
+        run: |
+          set -euo pipefail
+          case "$DECISION" in
+            PROCEED)
+              gh issue edit "$ISSUE" --add-label "claude:awaiting-approval"
+              gh issue comment "$ISSUE" --body "⏸ Plan ready for review. Remove the \`claude:awaiting-approval\` label to approve and advance to **Development**, or apply \`claude:rejected\` to send it back to Triage."
+              ;;
+            BOUNCE)
+              gh issue edit "$ISSUE" --remove-label "stage:plan" --add-label "stage:triage"
+              gh issue comment "$ISSUE" --body "↩️ Bouncing back to **Triage**: ${BOUNCE_REASON:-no reason provided}"
+              ;;
+            *)
+              gh issue comment "$ISSUE" --body "⚠️ Plan agent returned an unexpected decision: \`$DECISION\`. Pipeline halted."
+              exit 1
+              ;;
+          esac
