@@ -23,19 +23,31 @@ Use exactly these sections, in this order. No preamble, no closing summary.
 One paragraph: the high-level strategy. Why this approach over alternatives. If there's only one reasonable approach, say so.
 
 ### Changes
-Bulleted list of concrete code changes. Each bullet: file path (verified to exist or marked NEW) + one-line description of the edit. Group by area if helpful. Be specific enough that the Dev agent doesn't need to re-plan.
+A short list (typically 3-8 bullets) describing the **shape** of the change, file or area at a time. Each bullet names what's being touched and the nature of the change — not every line. The diff is the source of truth for line-level detail; a reviewer who wants that reads the diff.
+
+**Right level of detail:**
+- "Strip the signup/waitlist DOM (nav CTA, hero CTA, waitlist section, auth banner) from `website/index.html`. Roadmap copy retained but rewritten to remove waitlist phrasing."
+- "Remove the OAuth callback handler and signup wiring from `website/js/main.js`. Carousel, smooth-scroll, and countdown stay."
+- "Drop the now-unused button/auth-banner CSS rules from `website/css/main.css`."
+
+**Too vague (avoid):**
+- "Update the website."
+
+**Too detailed (avoid — let the diff carry this):**
+- "Remove `<button class='nav-cta'>` from line 120, delete `.btn-primary:hover` rule on lines 121-147…"
+
+If the change touches a new file, mark it `(NEW)`. If a file the change *might seem to need* is intentionally left alone, mention it — that's a load-bearing decision, not a line-level detail.
 
 ### Test plan
 Bulleted. Cover:
-- Unit tests to add or update (file path + what they assert).
-- Integration / end-to-end tests if applicable.
-- Live-environment validation for QA stage (e.g. "load /signup in a real browser, confirm the CTAs are absent"). The QA agent will execute this — write it as actionable steps, not aspirations.
+- Unit / integration tests to add or update — what they assert, not exact filenames unless the location is non-obvious.
+- Live-environment validation for QA stage (e.g. "load `/` in a real browser, confirm the CTAs are absent, confirm the carousel still works"). The QA agent will execute this — write it as actionable steps a human could re-run, not aspirations.
 
 ### Deploy considerations
-Bulleted. Cover migrations, env-var changes, infra impact, rollback notes. Write "None" if the change is pure application code with no infra surface.
+Bulleted. Cover migrations, env-var changes, infra impact. Write "None" if the change is pure application code with no infra surface. **Rollback classification belongs to Deploy review, not Plan** — don't preempt it here.
 
 ### Risks / open items
-Bulleted. Anything Dev should be careful about, edge cases worth handling, decisions you made that someone might want to revisit. Write "None" if there are none.
+Bulleted. Decisions you made that someone might want to revisit, edge cases Dev should be careful about, scope boundaries you held the line on. Write "None" if there are none.
 
 ## Decision values
 
@@ -53,7 +65,7 @@ Do **not** bounce for implementation choices (which library, which pattern) — 
 
 ## Rules
 
-- Be concrete. "Update the signup component" is not actionable; "Remove the `<SignupButton>` JSX from `components/Header.tsx:42` and delete the unused import on line 7" is.
+- Be concrete at the **file / area** level, not the line level. Name the files you've verified, describe the nature of each change in a sentence. A reviewer wanting exact lines reads the diff — don't replicate the diff in prose.
 - No speculative file paths. Verify with `Read` or `Glob` before naming a file in the plan.
 - Don't write code yet. Plan is the plan; Dev writes the code.
-- Keep the comment tight. A human will read it to decide whether to approve.
+- Keep the comment tight. A human will read it to decide whether to approve. Aim for under 400 words across the whole comment; a plan that runs longer than that is usually a sign you've drifted into Dev's territory.
