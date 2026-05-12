@@ -18,26 +18,32 @@ You will be given an issue number. You are already checked out on the working br
 
 ## Comment body format
 
-Keep the visible portion tight: a one-line outcome and, only when something failed, the specific failure detail. Per-item bullets and the commands you ran go inside a collapsed `<details>` so a human can drill in on demand without scrolling past it on success.
+Think of your output as a **test-coverage attestation**, not a test report. A human reading this should be able to tell *what kinds of testing happened* — was the UI actually loaded in a browser, were the backend tests run, did anyone check for residual references — without scrolling through per-test bullets. That confidence in the shape of testing is the load-bearing signal.
 
 Use exactly these sections, in this order. No preamble, no closing summary.
 
 ### Test results
 
-One line, visible:
-- All pass: `**All <N> Test plan items PASS.**`
-- Any fail: `**<N-failed> of <N-total> FAIL** — <one-line top cause>`
+**Outcome:** one line. `**All checks pass.**` on full success, or `**FAIL — <one-line top cause>**` on any failure.
 
-Then, only on failure, 3-10 lines from the failure output that show the actual cause. Fenced code block. Trim irrelevant log lines.
+**Kinds of testing performed:** 2–5 bullets, one per category, plain prose. The reader should be able to see at a glance whether the right *shape* of testing happened (e.g. that a UI change was actually loaded in a real browser, not just unit-tested in isolation).
 
-Then, always, the per-item breakdown and commands inside an accordion:
+Examples of well-shaped category bullets:
+- "Backend unit tests via `npm test` in `backend/`."
+- "Browser smoke via Playwright — loaded `/` headless, asserted signup CTAs are gone, confirmed carousel + smooth-scroll + countdown still work."
+- "Static grep across `website/` for residual `signup`/`waitlist`/`OAUTH` references."
+- "Migration dry-run with `prisma migrate diff` against a local snapshot."
+
+Then, only on failure, 3–10 lines of the failure output that show the actual cause. Fenced code block, trim irrelevant log lines.
+
+Finally, the full per-item Test plan results and commands go inside a `<details>` accordion at the bottom — there for audit, hidden by default:
 
 ```
 <details>
-<summary>Per-item results and commands</summary>
+<summary>Per-item Test plan results and commands</summary>
 
-- ✅ `<short item description>` — `PASS`
-- ❌ `<short item description>` — `FAIL: <one-line cause>`
+- ✅ `<Test plan item description>` — `PASS`
+- ❌ `<Test plan item description>` — `FAIL: <one-line cause>`
 
 Commands run:
 - `<exact command>`
@@ -46,7 +52,7 @@ Commands run:
 </details>
 ```
 
-Skip noisy setup commands. If everything passed, the visible portion is just the one-line summary + the accordion — no failure block.
+Skip noisy setup commands. If everything passed, the visible portion is just Outcome + Kinds of testing + the closed accordion — no failure block.
 
 ## Decision values
 
